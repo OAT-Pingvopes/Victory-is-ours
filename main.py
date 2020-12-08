@@ -26,7 +26,7 @@ class Board:
                     pygame.draw.rect(screen, (0, 0, 0), ((position[0] + 1, position[1] + 1),
                                                          (size[0] - 2, size[1] - 2)), 0)
                 else:
-                    pygame.draw.rect(screen, (255, 255, 255), ((position[0] + 1, position[1] + 1),
+                    pygame.draw.rect(screen, (0, 255, 0), ((position[0] + 1, position[1] + 1),
                                                                (size[0] - 2, size[1] - 2)), 0)
 
     def on_click(self, cell):
@@ -39,7 +39,7 @@ class Board:
             return None
         for x in range(len(self.board)):
             for y in range(len(self.board[x])):
-                if x == cell_y or y == cell_x:
+                if x == cell_y and y == cell_x:
                     if self.board[x][y] == 1:
                         self.board[x][y] = 0
                     else:
@@ -57,8 +57,8 @@ if __name__ == '__main__':
     pygame.display.set_caption('Чёрное в белое и наоборот')
     size = width, height = 800, 400
     screen = pygame.display.set_mode(size)
-    board = Board(4, 3)
-    board.set_view(100, 100, 50)
+    board = Board(16, 8)
+    board.set_view(0, 0, 50)
     running = True
     while running:
         for event in pygame.event.get():
