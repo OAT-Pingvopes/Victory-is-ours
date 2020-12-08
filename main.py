@@ -1,4 +1,5 @@
 import pygame
+import random
 
 
 class Board:
@@ -10,6 +11,9 @@ class Board:
         self.left = 10
         self.top = 10
         self.cell_size = 30
+        for i in range(len(self.board)):
+            self.board[i].append(2)
+            random.shuffle(self.board[i])
 
     def set_view(self, left, top, cell_size):
         self.left = left
@@ -25,8 +29,11 @@ class Board:
                 if self.board[y][x] == 0:
                     pygame.draw.rect(screen, (0, 0, 0), ((position[0] + 1, position[1] + 1),
                                                          (size[0] - 2, size[1] - 2)), 0)
-                else:
+                elif self.board[y][x] == 2:
                     pygame.draw.rect(screen, (0, 255, 0), ((position[0] + 1, position[1] + 1),
+                                                         (size[0] - 2, size[1] - 2)), 0)
+                else:
+                    pygame.draw.rect(screen, (255, 255, 255), ((position[0] + 1, position[1] + 1),
                                                                (size[0] - 2, size[1] - 2)), 0)
 
     def on_click(self, cell):
@@ -42,6 +49,8 @@ class Board:
                 if x == cell_y and y == cell_x:
                     if self.board[x][y] == 1:
                         self.board[x][y] = 0
+                    elif self.board[x][y] == 2:
+                        self.board[x][y] = 2
                     else:
                         self.board[x][y] = 1
         return cell_x, cell_y
@@ -54,7 +63,7 @@ if __name__ == '__main__':
     fps = 60  # количество кадров в секунду
     clock = pygame.time.Clock()
     pygame.init()
-    pygame.display.set_caption('Чёрное в белое и наоборот')
+    pygame.display.set_caption('Victory is ours')
     size = width, height = 800, 400
     screen = pygame.display.set_mode(size)
     board = Board(16, 8)
