@@ -68,5 +68,5 @@ if __name__ == '__main__':
                 board.get_click(event.pos)
         board.render()
         pygame.display.flip()
-        clock.tick(50)
+        clock.tick(60)
     pygame.quit()
