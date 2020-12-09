@@ -7,13 +7,13 @@ class Board:
     def __init__(self, width, height):
         self.width = width
         self.height = height
-        self.board = [[0] * width for _ in range(height)]
+        self.board = [[0] * (width - 1) for _ in range(height)]
         self.left = 10
         self.top = 10
         self.cell_size = 30
-        for i in range(len(self.board)):
-            self.board[i].append(2)
-            random.shuffle(self.board[i])
+        for i in self.board:
+            i.append(2)
+            random.shuffle(i)
 
     def set_view(self, left, top, cell_size):
         self.left = left
@@ -66,8 +66,8 @@ if __name__ == '__main__':
     pygame.display.set_caption('Victory is ours')
     size = width, height = 800, 400
     screen = pygame.display.set_mode(size)
-    board = Board(16, 8)
-    board.set_view(0, 0, 50)
+    board = Board(14, 7)
+    board.set_view(100, 50, 50)
     running = True
     while running:
         for event in pygame.event.get():
