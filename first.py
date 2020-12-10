@@ -52,6 +52,7 @@ class Button:
 class Board:
     # создание поля
     def __init__(self, width, height):
+        self.b = 0
         self.width = width
         self.height = height
         self.board = [[0] * width for _ in range(height)]
@@ -109,17 +110,27 @@ class Board:
     def menu(self):
         background = pygame.image.load('orange.bmp.jpg')
         close = Button()
+        start = Button()
         show = True
         while show:
             for event in pygame.event.get():
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     if close.pressed(event.pos):
-                        pygame.quit()
+                        exit()
+                    elif start.pressed(event.pos):
+                        start.create_button(screen, (34, 139, 34), 860, 430, 200, 50, 100,
+                                            'Продолжить', (255, 255, 255))
+                        show = False
+                        self.b = 1
                 elif event.type == KEYDOWN:
-                    if event.key == K_ESCAPE:
+                    if event.key == K_ESCAPE and self.b == 1:
                         show = False
             screen.blit(background, (0, 0))
-            close.create_button(screen, (34, 139, 34), 100, 100, 100, 100, 100, 'Выйти', (255, 255, 255))
+            close.create_button(screen, (34, 139, 34), 860, 520, 200, 50, 100, 'Выйти', (255, 255, 255))
+            if self.b == 0:
+                start.create_button(screen, (34, 139, 34), 860, 430, 200, 50, 100, 'Старт', (255, 255, 255))
+            else:
+                start.create_button(screen, (34, 139, 34), 860, 430, 200, 50, 100, 'Продолжить', (255, 255, 255))
             pygame.display.update()
             clock.tick(60)
         screen.fill('black')
@@ -132,7 +143,7 @@ if __name__ == '__main__':
     pygame.display.set_caption('Victory is ours')
     screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
     board = Board(16, 8)
-    board.set_view(0, 0, 50)
+    board.menu()
     running = True
     while running:
         for event in pygame.event.get():
