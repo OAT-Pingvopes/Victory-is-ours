@@ -128,7 +128,7 @@ class Board:
         self.on_click(cell)
 
     def menu(self):
-        background = pygame.image.load('orange.bmp.jpg')
+        background = pygame.image.load('data/start_menu.png')
         close = Button()
         start = Button()
         show = True
