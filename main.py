@@ -55,13 +55,34 @@ class Board:
         self.b = 0
         self.width = width
         self.height = height
-        self.board = [[0] * width for _ in range(height)]
+        self.board = []
+        self.color = {0: (0, 0, 255), 1: (255, 255, 255), 2: (0, 255, 0)}
+        for i in range(height):
+            if i < 3 or i > 17:
+                self.board.append([0] * width)
+            elif 3 <= i < 6 or 14 < i <= 17:
+                col = []
+                for j in range(width):
+                    if j < 3 or j > 33:
+                        col.append(0)
+                    elif 3 <= j < 16 or 21 < j <= 34:
+                        col.append(random.choice([0, 0, 2]))
+                    else:
+                        col.append(random.choice([0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]))
+                self.board.append(col)
+            else:
+                col = []
+                for j in range(width):
+                    if j < 3 or j > 34:
+                        col.append(0)
+                    elif 3 <= j < 16 or 21 < j <= 34:
+                        col.append(random.choice([0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]))
+                    else:
+                        col.append(random.choice([0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]))
+                self.board.append(col)
         self.left = 10
         self.top = 10
         self.cell_size = 30
-        for i in range(len(self.board)):
-            self.board[i].append(2)
-            random.shuffle(self.board[i])
 
     def set_view(self, left, top, cell_size):
         self.left = left
@@ -74,15 +95,8 @@ class Board:
                 position = (x * self.cell_size + self.left, y * self.cell_size + self.top)
                 size = self.cell_size, self.cell_size
                 pygame.draw.rect(screen, (128, 128, 128), (position, size), 1)
-                if self.board[y][x] == 0:
-                    pygame.draw.rect(screen, (0, 0, 0), ((position[0] + 1, position[1] + 1),
-                                                         (size[0] - 2, size[1] - 2)), 0)
-                elif self.board[y][x] == 2:
-                    pygame.draw.rect(screen, (0, 255, 0), ((position[0] + 1, position[1] + 1),
-                                                           (size[0] - 2, size[1] - 2)), 0)
-                else:
-                    pygame.draw.rect(screen, (255, 255, 255), ((position[0] + 1, position[1] + 1),
-                                                               (size[0] - 2, size[1] - 2)), 0)
+                pygame.draw.rect(screen, self.color[int(self.board[y][x])], ((position[0] + 1, position[1] + 1),
+                                                    (size[0] - 2, size[1] - 2)), 0)
 
     def on_click(self, cell):
         pass
@@ -108,7 +122,7 @@ class Board:
         self.on_click(cell)
 
     def menu(self):
-        background = pygame.image.load('orange.bmp.jpg')
+        background = pygame.image.load('data/start_menu.png')
         close = Button()
         start = Button()
         show = True
