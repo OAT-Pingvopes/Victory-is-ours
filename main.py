@@ -5,6 +5,10 @@ from pygame.locals import *
 pygame.init()
 
 
+class Research:
+    pass
+
+
 class Button:
     def create_button(self, surface, color, x, y, length, height, width, text, text_color):
         surface = self.draw_button(surface, color, length, height, x, y, width)
@@ -156,9 +160,9 @@ if __name__ == '__main__':
     pygame.init()
     pygame.display.set_caption('Victory is ours')
     screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
-    board = Board(38, 21)
+    board = Board(37, 21)
     board.menu()
-    board.set_view(20, 30, 50)
+    board.set_view(70, 30, 50)
     running = True
     while running:
         for event in pygame.event.get():
