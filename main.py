@@ -9,6 +9,7 @@ pygame.init()
 # 10 - пехота
 # 20 - мотопехота
 # 30 - танк
+# 40 - самолёт
 all_sprites = pygame.sprite.Group()
 
 
