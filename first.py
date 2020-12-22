@@ -110,6 +110,8 @@ class Board:
                 else:
                     pygame.draw.rect(screen, (255, 255, 255), ((position[0] + 1, position[1] + 1),
                                                                (size[0] - 2, size[1] - 2)), width=4)
+                    pygame.draw.rect(screen, (0, 255, 0), ((position[0] + 3, position[1] + 3),
+                                                           (size[0] - 6, size[1] - 6)), 0)
 
     def on_click(self, cell):
         pass
