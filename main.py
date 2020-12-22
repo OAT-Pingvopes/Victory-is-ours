@@ -3,10 +3,13 @@ import random
 from pygame.locals import *
 
 pygame.init()
-
-
-class Research:
-    pass
+# 0 - вода
+# 1 - выделенная клетка
+# 2 - земля
+# 10 - пехота
+# 20 - мотопехота
+# 30 - танк
+all_sprites = pygame.sprite.Group()
 
 
 class Button:
@@ -100,7 +103,7 @@ class Board:
                 size = self.cell_size, self.cell_size
                 pygame.draw.rect(screen, (128, 128, 128), (position, size), 1)
                 pygame.draw.rect(screen, self.color[int(self.board[y][x])], ((position[0] + 1, position[1] + 1),
-                                                    (size[0] - 2, size[1] - 2)), 0)
+                                                                             (size[0] - 2, size[1] - 2)), 0)
 
     def on_click(self, cell):
         pass
@@ -114,10 +117,14 @@ class Board:
             for y in range(len(self.board[x])):
                 if x == cell_y and y == cell_x:
                     if self.board[x][y] == 1:
-                        self.board[x][y] = 0
-                    elif self.board[x][y] == 2:
                         self.board[x][y] = 2
+                    elif self.board[x][y] == 0:
+                        self.board[x][y] = 0
                     else:
+                        for i in range(len(self.board)):
+                            for j in range(len(self.board[x])):
+                                if self.board[i][j] == 1:
+                                    self.board[i][j] = 2
                         self.board[x][y] = 1
         return cell_x, cell_y
 
@@ -154,22 +161,27 @@ class Board:
         screen.fill('black')
 
 
+class Unit(pygame.sprite.Sprite):
+    pass
+
+
 if __name__ == '__main__':
     fps = 60  # количество кадров в секунду
     clock = pygame.time.Clock()
     pygame.init()
     pygame.display.set_caption('Victory is ours')
     screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
-    board = Board(37, 21)
+    board = Board(38, 21)
     board.menu()
-    board.set_view(70, 30, 50)
+    board.set_view(20, 30, 50)
     running = True
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
             if event.type == pygame.MOUSEBUTTONDOWN:
-                board.get_click(event.pos)
+                if event.button == 1:
+                    board.get_click(event.pos)
             elif event.type == KEYDOWN:
                 if event.key == K_ESCAPE:
                     board.menu()
