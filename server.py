@@ -3,6 +3,9 @@
 
 import socket
 
+f = open('data/cfg.txt', mode='r').readlines()
+f = f[0]
+f = f.encode('utf-8')
 sock = socket.socket()
 host = ''
 port = 5050
@@ -16,4 +19,4 @@ while True:
     data = conn.recv(1024)
     if not data:
         break
-    conn.send(data)
+    conn.send(f)
