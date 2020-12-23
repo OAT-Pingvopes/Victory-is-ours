@@ -10,8 +10,9 @@ class Twist_client(protocol.Protocol):
     # Отправка сообщения с проверкой
     def sendData(self):
         data = raw_input('write message: ')
-        data = nickname + ': ' + data
         if data:
+            data = nickname + ': ' + data
+            self.checker = data
             self.transport.write(str.encode(data, encoding='utf-8'))
         else:
             # transport.loseConnection() - разрыв соединения
@@ -21,6 +22,9 @@ class Twist_client(protocol.Protocol):
         self.sendData()
 
     def dataReceived(self, data):
+        data = bytes.decode(data, encoding='utf-8')
+        if self.checker != data:
+            print(data)
         self.sendData()
 
 
