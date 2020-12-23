@@ -1,19 +1,27 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
+#!/usr/bin/python3           # This is server.py file
 import socket
 
-sock = socket.socket()
-sock.bind(('', 9090))
-sock.listen(1)
-conn, addr = sock.accept()
+# create a socket object
+serversocket = socket.socket(
+    socket.AF_INET, socket.SOCK_STREAM)
 
-print('connected:', addr)
+# get local machine name
+host = socket.gethostname()
+
+port = 9999
+
+# bind to the port
+serversocket.bind((host, port))
+
+# queue up to 5 requests
+serversocket.listen(5)
 
 while True:
-    data = conn.recv(1024)
-    if not data:
-        break
-    conn.send(data.upper())
+    # establish a connection
+    clientsocket, addr = serversocket.accept()
 
-conn.close()
+    print("Got a connection from %s" % str(addr))
+
+    msg = 'Thank you for connecting' + "\r\n"
+    clientsocket.send(msg.encode('ascii'))
+    clientsocket.close()
