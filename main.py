@@ -1,15 +1,25 @@
 import pygame
 import random
+# import client
+# import network
 from pygame.locals import *
 
 pygame.init()
 # 0 - вода
 # 1 - выделенная клетка
 # 2 - земля
+# 3 - железо
+# 4 - дерево
+# 5 - нефть
+# 6 -
+# 7 -
+# 8 -
+# 9 - артиллерия
 # 10 - пехота
 # 20 - мотопехота
 # 30 - танк
 # 40 - самолёт
+# 50 - вертолёт
 all_sprites = pygame.sprite.Group()
 
 

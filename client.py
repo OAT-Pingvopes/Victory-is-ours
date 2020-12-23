@@ -1,7 +1,8 @@
 from twisted.internet import protocol, reactor
 from twisted.python.compat import raw_input
 
-nickname = 'Mr.Andron'
+f = open('data/cfg.txt', mode='r').readlines()
+nickname = (f[0].split())[2]
 host = 'localhost'
 port = 777
 
