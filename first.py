@@ -63,6 +63,7 @@ class Board:
         self.width = width
         self.height = height
         self.board = []
+        self.color = {0: (0, 0, 255), 1: (255, 255, 255), 2: (0, 255, 0)}
         for i in range(height):
             if i < 3 or i > 17:
                 self.board.append([0] * width)
@@ -101,17 +102,14 @@ class Board:
                 position = (x * self.cell_size + self.left, y * self.cell_size + self.top)
                 size = self.cell_size, self.cell_size
                 pygame.draw.rect(screen, (128, 128, 128), (position, size), 1)
-                if self.board[y][x] == 0:
-                    pygame.draw.rect(screen, (0, 0, 255), ((position[0] + 1, position[1] + 1),
-                                                         (size[0] - 2, size[1] - 2)), 0)
-                elif self.board[y][x] == 2:
-                    pygame.draw.rect(screen, (0, 255, 0), ((position[0] + 1, position[1] + 1),
-                                                           (size[0] - 2, size[1] - 2)), 0)
-                else:
+                if self.board[y][x] == 1:
                     pygame.draw.rect(screen, (255, 255, 255), ((position[0] + 1, position[1] + 1),
                                                                (size[0] - 2, size[1] - 2)), width=4)
                     pygame.draw.rect(screen, (0, 255, 0), ((position[0] + 3, position[1] + 3),
                                                            (size[0] - 6, size[1] - 6)), 0)
+                else:
+                    pygame.draw.rect(screen, self.color[int(self.board[y][x])], ((position[0] + 1, position[1] + 1),
+                                                                                (size[0] - 2, size[1] - 2)), 0)
 
     def on_click(self, cell):
         pass
@@ -144,6 +142,8 @@ class Board:
         background = pygame.image.load('data/start_menu.png')
         close = Button()
         start = Button()
+        save = Button()
+        load = Button()
         show = True
         while show:
             for event in pygame.event.get():
@@ -155,11 +155,21 @@ class Board:
                                             'Продолжить', (255, 255, 255))
                         show = False
                         self.b = 1
+                    elif save.pressed(event.pos):
+                        file = open('data/save.txt', 'w')
+                        for x in self.board:
+                            file.write(str(x) + '\n')
+                        file.close()
+                        show = False
+                    elif load.pressed(event.pos):
+                        pass
                 elif event.type == KEYDOWN:
                     if event.key == K_ESCAPE and self.b == 1:
                         show = False
             screen.blit(background, (0, 0))
-            close.create_button(screen, (34, 139, 34), 860, 520, 200, 50, 100, 'Выйти', (255, 255, 255))
+            close.create_button(screen, (34, 139, 34), 860, 700, 200, 50, 100, 'Выйти', (255, 255, 255))
+            save.create_button(screen, (34, 139, 34), 860, 520, 200, 50, 100, 'Сохранить', (255, 255, 255))
+            load.create_button(screen, (34, 139, 34), 860, 610, 200, 50, 100, 'Загрузить', (255, 255, 255))
             if self.b == 0:
                 start.create_button(screen, (34, 139, 34), 860, 430, 200, 50, 100, 'Старт', (255, 255, 255))
             else:
