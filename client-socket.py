@@ -1,20 +1,15 @@
-#!/usr/bin/python3           # This is client.py file
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 import socket
 
-# create a socket object
-s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+sock = socket.socket()
+host = 'Crazy-frog'
+port = 9090
+word = 'hello'.encode('utf-8')
+sock.connect((host, port))
+sock.send(word)
 
-# get local machine name
-host = socket.gethostname()
+data = sock.recv(1024)
 
-port = 9999
-
-# connection to hostname on the port.
-s.connect((host, port))
-
-# Receive no more than 1024 bytes
-msg = s.recv(1024)
-
-s.close()
-print (msg.decode('ascii'))
+print(data.decode('utf-8'))

@@ -1,27 +1,16 @@
-#!/usr/bin/python3           # This is server.py file
 import socket
 
-# create a socket object
-serversocket = socket.socket(
-    socket.AF_INET, socket.SOCK_STREAM)
+sock = socket.socket()
+sock.bind(('Crazy-frog', 9090))
+sock.listen(1)
+conn, addr = sock.accept()
 
-# get local machine name
-host = socket.gethostname()
-
-port = 9999
-
-# bind to the port
-serversocket.bind((host, port))
-
-# queue up to 5 requests
-serversocket.listen(5)
+print('connected:', addr)
 
 while True:
-    # establish a connection
-    clientsocket, addr = serversocket.accept()
+    data = conn.recv(1024)
+    if not data:
+        break
+    conn.send(data)
 
-    print("Got a connection from %s" % str(addr))
-
-    msg = 'Thank you for connecting' + "\r\n"
-    clientsocket.send(msg.encode('ascii'))
-    clientsocket.close()
+conn.close()
