@@ -4,12 +4,12 @@
 import socket
 
 sock = socket.socket()
-host = 'Crazy-frog'
-port = 9090
-word = 'hello'.encode('utf-8')
+host = '192.168.0.1'
+port = 5050
+word = ('hello').encode()
 sock.connect((host, port))
 sock.send(word)
 
-data = sock.recv(1024)
-
-print(data.decode('utf-8'))
+while True:
+    data = sock.recv(1024)
+    print(data)
