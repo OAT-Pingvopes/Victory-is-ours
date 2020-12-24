@@ -13,7 +13,9 @@ conn, addr = sock.accept()
 print('connected:', addr)
 
 while True:
-    data = conn.recv(1024)
+    data = conn.recv(10240)
+    print(data.decode('utf-8'))
     if not data:
         break
-    conn.send(ans)
+    ans = input()
+    conn.send(ans.encode('utf-8'))

@@ -1,1 +1,1 @@
-nickname = 'Mr.Andron'
+nickname = ''
