@@ -31,11 +31,18 @@ class InputBox:
         self.text = text
         self.txt_surface = FONT.render(text, True, self.color)
         self.active = False
+        nick = open('data/cfg.txt', mode='r').readlines()[0].split()[2]
+        if nick == "''":
+            self.work = True
+        else:
+            self.work = False
+            self.text = nick[1:-1]
+            self.txt_surface = FONT.render(self.text, True, self.color)
 
     def handle_event(self, event):
         if event.type == pygame.MOUSEBUTTONDOWN:
                 # If the user clicked on the input_box rect.
-            if self.rect.collidepoint(event.pos):
+            if self.rect.collidepoint(event.pos) and self.work:
                     # Toggle the active variable.
                 self.active = not self.active
             else:
@@ -43,9 +50,7 @@ class InputBox:
             # Change the current color of the input box.
             self.color = COLOR_ACTIVE if self.active else COLOR_INACTIVE
         if event.type == pygame.KEYDOWN:
-            if self.active:
-                if event.key == pygame.K_KP_ENTER:
-                    print('ENTER')
+            if self.active and self.work:
                 if event.key == pygame.K_RETURN:
                     print(self.text)
                     self.text = ''
@@ -57,13 +62,14 @@ class InputBox:
                 self.txt_surface = FONT.render(self.text, True, self.color)
 
     def register(self):
-        f = open('data/cfg.txt', mode='r').readlines()
-        izmena = f[0].split()
-        nick = izmena[2]
-        if nick[1:-1] == '':
-            izmena[2] = "'" + self.text + "'"
+        nick = open('data/cfg.txt', mode='r').readlines()[0].split()
+        if nick[2] == "''":
+            nick[2] = "'" + self.text + "'"
             f = open('data/cfg.txt', mode='w')
-            f.write(' '.join(izmena))
+            f.write(' '.join(nick))
+            if self.text:
+                self.work = False
+
 
 
     def update(self):
@@ -209,9 +215,10 @@ class Board:
         while show:
             for event in pygame.event.get():
                 if event.type == pygame.MOUSEBUTTONDOWN:
+                    self.nick = open('data/cfg.txt', mode='r').readlines()[0].split()[2][1:-1]
                     if close.pressed(event.pos):
                         exit()
-                    elif start.pressed(event.pos):
+                    elif start.pressed(event.pos) and self.nick:
                         start.create_button(screen, (34, 139, 34), 860, 430, 200, 50, 100,
                                             'Продолжить', (255, 255, 255))
                         show = False
