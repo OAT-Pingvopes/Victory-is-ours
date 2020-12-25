@@ -218,7 +218,7 @@ class Board:
                                             'Продолжить', (255, 255, 255))
                         show = False
                         self.b = 1
-                    elif save.pressed(event.pos):
+                    elif save.pressed(event.pos) and self.b == 1:
                         file = open('data/save.txt', 'w')
                         for x in self.board:
                             file.write(str(x) + '\n')
