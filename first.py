@@ -126,27 +126,31 @@ class Board:
         self.board = []
         self.color = {0: (0, 0, 255), 1: (255, 255, 255), 2: (0, 255, 0)}
         for i in range(height):
-            if i < 3 or i > 17:
+            if i < 5 or i > 29:
                 self.board.append([0] * width)
-            elif 3 <= i < 6 or 14 < i <= 17:
+            elif 5 <= i < 10 or 24 < i <= 29:
                 col = []
                 for j in range(width):
-                    if j < 3 or j > 33:
+                    if j < 5 or j > 57:
                         col.append(0)
-                    elif 3 <= j < 16 or 21 < j <= 34:
-                        col.append(random.choice([0, 0, 2]))
+                    elif 5 <= j < 20 or 42 < j <= 57:
+                        col.append(random.choice([0, 0, 0, 0, 2]))
+                    elif 5 <= j < 20 or 42 < j <= 57:
+                        col.append(random.choice([0, 2]))
                     else:
                         col.append(random.choice([0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]))
                 self.board.append(col)
             else:
                 col = []
                 for j in range(width):
-                    if j < 3 or j > 34:
+                    if j < 5 or j > 57:
                         col.append(0)
-                    elif 3 <= j < 16 or 21 < j <= 34:
-                        col.append(random.choice([0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]))
+                    elif 5 <= j < 20 or 42 < j <= 57:
+                        col.append(random.choice([0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]))
+                    elif 20 <= j < 25 or 37 < j <= 42:
+                        col.append(random.choice([0, 2, 2, 2, 2, 2, 2, 2]))
                     else:
-                        col.append(random.choice([0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]))
+                        col.append(random.choice([0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]))
                 self.board.append(col)
         self.left = 10
         self.top = 10
@@ -236,7 +240,7 @@ class Board:
             screen.blit(background, (0, 0))
             for box in input_boxes:
                 box.draw(screen)
-            close.create_button(screen, (34, 139, 34), 860, 520, 200, 50, 100, 'Выйти', (255, 255, 255))
+            close.create_button(screen, (34, 139, 34), 860, 700, 200, 50, 100, 'Выйти', (255, 255, 255))
             reg.create_button(screen, (34, 139, 34), 1450, 991, 200, 50, 100,
                               'Принять Ник', (255, 255, 255))
             save.create_button(screen, (34, 139, 34), 860, 520, 200, 50, 100, 'Сохранить', (255, 255, 255))
