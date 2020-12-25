@@ -1,4 +1,7 @@
+import os
 import random
+import sys
+
 from pygame.locals import *
 import pygame
 pygame.init()
@@ -8,9 +11,6 @@ pygame.init()
 # 3 - железо
 # 4 - дерево
 # 5 - нефть
-# 6 -
-# 7 -
-# 8 -
 # 9 - артиллерия
 # 10 - пехота
 # 20 - мотопехота
@@ -23,8 +23,17 @@ COLOR_ACTIVE = pygame.Color('dodgerblue2')
 FONT = pygame.font.Font(None, 32)
 
 
-class InputBox:
+def load_image(name, colorkey=None):
+    fullname = os.path.join('data', name)
+    # если файл не существует, то выходим
+    if not os.path.isfile(fullname):
+        print(f"Файл с изображением '{fullname}' не найден")
+        sys.exit()
+    image = pygame.image.load(fullname)
+    return image
 
+
+class InputBox:
     def __init__(self, x, y, w, h, text=''):
         self.rect = pygame.Rect(x, y, w, h)
         self.color = COLOR_INACTIVE
@@ -127,30 +136,34 @@ class Board:
         self.board = []
         self.color = {0: (0, 0, 255), 1: (255, 255, 255), 2: (0, 255, 0)}
         for i in range(height):
-            if i < 3 or i > 17:
+            if i < 5 or i > 29:
                 self.board.append([0] * width)
-            elif 3 <= i < 6 or 14 < i <= 17:
+            elif 5 <= i < 10 or 24 < i <= 29:
                 col = []
                 for j in range(width):
-                    if j < 3 or j > 33:
+                    if j < 5 or j > 57:
                         col.append(0)
-                    elif 3 <= j < 16 or 21 < j <= 34:
-                        col.append(random.choice([0, 0, 2]))
+                    elif 5 <= j < 20 or 42 < j <= 57:
+                        col.append(random.choice([0, 0, 0, 0, 2]))
+                    elif 5 <= j < 20 or 42 < j <= 57:
+                        col.append(random.choice([0, 2]))
                     else:
                         col.append(random.choice([0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]))
                 self.board.append(col)
             else:
                 col = []
                 for j in range(width):
-                    if j < 3 or j > 34:
+                    if j < 5 or j > 57:
                         col.append(0)
-                    elif 3 <= j < 16 or 21 < j <= 34:
-                        col.append(random.choice([0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]))
+                    elif 5 <= j < 20 or 42 < j <= 57:
+                        col.append(random.choice([0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]))
+                    elif 20 <= j < 25 or 37 < j <= 42:
+                        col.append(random.choice([0, 2, 2, 2, 2, 2, 2, 2]))
                     else:
-                        col.append(random.choice([0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]))
+                        col.append(random.choice([0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]))
                 self.board.append(col)
-        self.left = 10
-        self.top = 10
+        self.left = 60
+        self.top = 30
         self.cell_size = 30
 
     def set_view(self, left, top, cell_size):
@@ -199,6 +212,8 @@ class Board:
         reg = Button()
         close = Button()
         start = Button()
+        save = Button()
+        load = Button()
         input_box1 = InputBox(1700, 1000, 200, 32)
         input_boxes = [input_box1]
         show = True
@@ -213,6 +228,14 @@ class Board:
                                             'Продолжить', (255, 255, 255))
                         show = False
                         self.b = 1
+                    elif save.pressed(event.pos) and self.b == 1:
+                        file = open('data/save.txt', 'w')
+                        for x in self.board:
+                            file.write(str(x) + '\n')
+                        file.close()
+                        show = False
+                    elif load.pressed(event.pos):
+                        pass
                     if reg.pressed(event.pos):
                         input_box1.register()
 
@@ -227,9 +250,11 @@ class Board:
             screen.blit(background, (0, 0))
             for box in input_boxes:
                 box.draw(screen)
-            close.create_button(screen, (34, 139, 34), 860, 520, 200, 50, 100, 'Выйти', (255, 255, 255))
+            close.create_button(screen, (34, 139, 34), 860, 700, 200, 50, 100, 'Выйти', (255, 255, 255))
             reg.create_button(screen, (34, 139, 34), 1450, 991, 200, 50, 100,
                               'Принять Ник', (255, 255, 255))
+            save.create_button(screen, (34, 139, 34), 860, 520, 200, 50, 100, 'Сохранить', (255, 255, 255))
+            load.create_button(screen, (34, 139, 34), 860, 610, 200, 50, 100, 'Загрузить', (255, 255, 255))
             if self.b == 0:
                 start.create_button(screen, (34, 139, 34), 860, 430, 200, 50, 100, 'Старт', (255, 255, 255))
             else:
@@ -241,7 +266,45 @@ class Board:
 
 
 class Unit(pygame.sprite.Sprite):
-    pass
+    def __init__(self, *group):
+        # НЕОБХОДИМО вызвать конструктор родительского класса Sprite.
+        # Это очень важно!!!
+        super().__init__(*group)
+        self.left = 60
+        self.top = 30
+        self.cell_size = 30
+
+    def update(self, x, y):
+        cell_x = (x - self.left) // self.cell_size
+        cell_y = (y - self.top) // self.cell_size
+        self.rect.x = self.left + cell_x * 30
+        self.rect.y = self.top + cell_y * 30
+
+
+class Soldier(Unit):
+    image = load_image('Sprite Of Brigada.png')
+
+    def __init__(self, *group):
+        # НЕОБХОДИМО вызвать конструктор родительского класса Sprite.
+        # Это очень важно!!!
+        super().__init__(*group)
+        self.image = Soldier.image
+        self.rect = self.image.get_rect()
+        self.rect.x = -30
+        self.rect.y = -30
+
+
+class Artillery(Unit):
+    image = load_image('Artillery.png')
+
+    def __init__(self, *group):
+        # НЕОБХОДИМО вызвать конструктор родительского класса Sprite.
+        # Это очень важно!!!
+        super().__init__(*group)
+        self.image = Artillery.image
+        self.rect = self.image.get_rect()
+        self.rect.x = -30
+        self.rect.y = -30
 
 
 if __name__ == '__main__':
@@ -254,17 +317,22 @@ if __name__ == '__main__':
     board.menu()
     board.set_view(60, 30, 30)
     running = True
+    soldat = Soldier(all_sprites)
+    artil = Artillery(all_sprites)
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
             if event.type == pygame.MOUSEBUTTONDOWN:
+                x, y = event.pos
                 if event.button == 1:
                     board.get_click(event.pos)
+                artil.update(x, y)
             elif event.type == KEYDOWN:
                 if event.key == K_ESCAPE:
                     board.menu()
         board.render()
+        all_sprites.draw(screen)
         pygame.display.flip()
         clock.tick(60)
     pygame.quit()
