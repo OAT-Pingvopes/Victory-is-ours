@@ -32,17 +32,12 @@ class InputBox:
         self.txt_surface = FONT.render(text, True, self.color)
         self.active = False
         nick = open('data/cfg.txt', mode='r').readlines()[0].split()[2]
-        if nick == "''":
-            self.work = True
-        else:
-            self.work = False
-            self.text = nick[1:-1]
-            self.txt_surface = FONT.render(self.text, True, self.color)
+        self.txt_surface = FONT.render(nick[1:-1], True, self.color)
 
     def handle_event(self, event):
         if event.type == pygame.MOUSEBUTTONDOWN:
                 # If the user clicked on the input_box rect.
-            if self.rect.collidepoint(event.pos) and self.work:
+            if self.rect.collidepoint(event.pos):
                     # Toggle the active variable.
                 self.active = not self.active
             else:
@@ -50,7 +45,7 @@ class InputBox:
             # Change the current color of the input box.
             self.color = COLOR_ACTIVE if self.active else COLOR_INACTIVE
         if event.type == pygame.KEYDOWN:
-            if self.active and self.work:
+            if self.active:
                 if event.key == pygame.K_RETURN:
                     print(self.text)
                     self.text = ''
@@ -63,14 +58,9 @@ class InputBox:
 
     def register(self):
         nick = open('data/cfg.txt', mode='r').readlines()[0].split()
-        if nick[2] == "''":
-            nick[2] = "'" + self.text + "'"
-            f = open('data/cfg.txt', mode='w')
-            f.write(' '.join(nick))
-            if self.text:
-                self.work = False
-
-
+        nick[2] = "'" + self.text + "'"
+        f = open('data/cfg.txt', mode='w')
+        f.write(' '.join(nick))
 
     def update(self):
         # Resize the box if the text is too long.

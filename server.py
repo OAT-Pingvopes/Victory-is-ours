@@ -1,7 +1,6 @@
 import socket
 
-f = open('data/cfg.txt', mode='r').readlines()
-f = f[0]
+f = open('data/cfg.txt', mode='r').readlines()[0].split()[2]
 ans = f.encode('utf-8')
 sock = socket.socket()
 host = ''
