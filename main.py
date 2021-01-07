@@ -182,12 +182,7 @@ class Board:
         self.top = 30
         self.cell_size = 30
 
-    def set_view(self, left, top, cell_size):
-        self.left = left
-        self.top = top
-        self.cell_size = cell_size
-
-    def render(self):
+    def place_of_war(self):
         water_image = load_image("SPwater.png")
         water = pygame.sprite.Sprite(all_sprites)
         water.image = water_image
@@ -204,10 +199,18 @@ class Board:
                     field.rect = field.image.get_rect()
                     pygame.draw.rect(screen, (128, 128, 128), (position, size), 1)
                     field.rect.x, field.rect.y = position[0], position[1]
-            if y <= 10:
-                position = (30, y * 2 * self.cell_size + self.top)
-                size = self.cell_size, self.cell_size
-                pygame.draw.rect(screen, (255, 215, 0), (position, size), 1)
+
+                if y <= 10:
+                    position = (30, y * 2 * self.cell_size + self.top)
+                    size = self.cell_size, self.cell_size
+                    pygame.draw.rect(screen, (255, 215, 0), (position, size), 1)
+
+    def set_view(self, left, top, cell_size):
+        self.left = left
+        self.top = top
+        self.cell_size = cell_size
+
+    def render(self):
         Artillery(all_sprites).update(30, self.top)
         Soldier(all_sprites).update(30, self.cell_size * 2 + self.top)
 
@@ -350,6 +353,7 @@ if __name__ == '__main__':
     running = True
     soldat = Soldier(all_sprites)
     artil = Artillery(all_sprites)
+    board.place_of_war()
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
