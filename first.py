@@ -1,16 +1,15 @@
+import os
 import random
+import sys
 from pygame.locals import *
 import pygame
 pygame.init()
 # 0 - вода
 # 1 - выделенная клетка
 # 2 - земля
-# 3 - железо
-# 4 - дерево
-# 5 - нефть
-# 6 -
-# 7 -
-# 8 -
+# 3 - железо(5)
+# 4 - дерево(10)
+# 5 - нефть(3)
 # 9 - артиллерия
 # 10 - пехота
 # 20 - мотопехота
@@ -21,6 +20,16 @@ all_sprites = pygame.sprite.Group()
 COLOR_INACTIVE = pygame.Color('lightskyblue3')
 COLOR_ACTIVE = pygame.Color('dodgerblue2')
 FONT = pygame.font.Font(None, 32)
+
+
+def load_image(name, colorkey=None):
+    fullname = os.path.join('data', name)
+    # если файл не существует, то выходим
+    if not os.path.isfile(fullname):
+        print(f"Файл с изображением '{fullname}' не найден")
+        sys.exit()
+    image = pygame.image.load(fullname)
+    return image
 
 
 class InputBox:
@@ -35,9 +44,9 @@ class InputBox:
 
     def handle_event(self, event):
         if event.type == pygame.MOUSEBUTTONDOWN:
-                # If the user clicked on the input_box rect.
+            # If the user clicked on the input_box rect.
             if self.rect.collidepoint(event.pos):
-                    # Toggle the active variable.
+                # Toggle the active variable.
                 self.active = not self.active
             else:
                 self.active = False
@@ -124,7 +133,7 @@ class Board:
         self.width = width
         self.height = height
         self.board = []
-        self.color = {0: (0, 0, 255), 1: (255, 255, 255), 2: (0, 255, 0)}
+        self.resources = {3: 5, 4: 10, 5: 3}
         for i in range(height):
             if i < 5 or i > 29:
                 self.board.append([0] * width)
@@ -134,11 +143,28 @@ class Board:
                     if j < 5 or j > 57:
                         col.append(0)
                     elif 5 <= j < 20 or 42 < j <= 57:
-                        col.append(random.choice([0, 0, 0, 0, 2]))
+                        a = random.choice([0, 0, 0, 0, 2])
+                        if a == 2:
+                            a = random.choice([2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 4, 4, 4])
+                            if a != 2:
+                                print(self.resources[a])
+                        col.append(a)
                     elif 5 <= j < 20 or 42 < j <= 57:
                         col.append(random.choice([0, 2]))
                     else:
                         col.append(random.choice([0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]))
+                self.board.append(col)
+            elif 10 <= i < 15 or 19 < i <= 24:
+                col = []
+                for j in range(width):
+                    if j < 5 or j > 57:
+                        col.append(0)
+                    elif 5 <= j < 20 or 42 < j <= 57:
+                        col.append(random.choice([0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]))
+                    elif 20 <= j < 25 or 37 < j <= 42:
+                        col.append(random.choice([0, 2, 2, 2, 2, 2, 2, 2]))
+                    else:
+                        col.append(random.choice([0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]))
                 self.board.append(col)
             else:
                 col = []
@@ -152,8 +178,8 @@ class Board:
                     else:
                         col.append(random.choice([0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]))
                 self.board.append(col)
-        self.left = 10
-        self.top = 10
+        self.left = 60
+        self.top = 30
         self.cell_size = 30
 
     def set_view(self, left, top, cell_size):
@@ -164,11 +190,30 @@ class Board:
     def render(self):
         for y in range(self.height):
             for x in range(self.width):
-                position = (x * self.cell_size + self.left, y * self.cell_size + self.top)
+                if self.board[y][x] == 2:
+                    position = (x * self.cell_size + self.left, y * self.cell_size + self.top)
+                    size = self.cell_size, self.cell_size
+                    field_image = load_image("grass.png")
+                    field = pygame.sprite.Sprite(all_sprites)
+                    field.image = field_image
+                    field.rect = field.image.get_rect()
+                    pygame.draw.rect(screen, (128, 128, 128), (position, size), 1)
+                    field.rect.x, field.rect.y = position[0], position[1]
+                elif self.board[y][x] == 0:
+                    position = (x * self.cell_size + self.left, y * self.cell_size + self.top)
+                    size = self.cell_size, self.cell_size
+                    field_image = load_image("SPwater.png")
+                    field = pygame.sprite.Sprite(all_sprites)
+                    field.image = field_image
+                    field.rect = field.image.get_rect()
+                    pygame.draw.rect(screen, (128, 128, 128), (position, size), 1)
+                    field.rect.x, field.rect.y = position[0], position[1]
+            if y <= 10:
+                position = (30, y * 2 * self.cell_size + self.top)
                 size = self.cell_size, self.cell_size
-                pygame.draw.rect(screen, (128, 128, 128), (position, size), 1)
-                pygame.draw.rect(screen, self.color[int(self.board[y][x])], ((position[0] + 1, position[1] + 1),
-                                                                             (size[0] - 2, size[1] - 2)), 0)
+                pygame.draw.rect(screen, (255, 215, 0), (position, size), 1)
+        Artillery(all_sprites).update(30, self.top)
+        Soldier(all_sprites).update(30, self.cell_size * 2 + self.top)
 
     def on_click(self, cell):
         pass
@@ -256,7 +301,45 @@ class Board:
 
 
 class Unit(pygame.sprite.Sprite):
-    pass
+    def __init__(self, *group):
+        # НЕОБХОДИМО вызвать конструктор родительского класса Sprite.
+        # Это очень важно!!!
+        super().__init__(*group)
+        self.left = 60
+        self.top = 30
+        self.cell_size = 30
+
+    def update(self, x, y):
+        cell_x = (x - self.left) // self.cell_size
+        cell_y = (y - self.top) // self.cell_size
+        self.rect.x = self.left + cell_x * 30
+        self.rect.y = self.top + cell_y * 30
+
+
+class Soldier(Unit):
+    image = load_image('Sprite Of Brigada.png')
+
+    def __init__(self, *group):
+        # НЕОБХОДИМО вызвать конструктор родительского класса Sprite.
+        # Это очень важно!!!
+        super().__init__(*group)
+        self.image = Soldier.image
+        self.rect = self.image.get_rect()
+        self.rect.x = -30
+        self.rect.y = -30
+
+
+class Artillery(Unit):
+    image = load_image('Artillery.png')
+
+    def __init__(self, *group):
+        # НЕОБХОДИМО вызвать конструктор родительского класса Sprite.
+        # Это очень важно!!!
+        super().__init__(*group)
+        self.image = Artillery.image
+        self.rect = self.image.get_rect()
+        self.rect.x = -30
+        self.rect.y = -30
 
 
 if __name__ == '__main__':
@@ -269,17 +352,24 @@ if __name__ == '__main__':
     board.menu()
     board.set_view(60, 30, 30)
     running = True
+    soldat = Soldier(all_sprites)
+    artil = Artillery(all_sprites)
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
             if event.type == pygame.MOUSEBUTTONDOWN:
+                x, y = event.pos
                 if event.button == 1:
                     board.get_click(event.pos)
+                    if x >= 60 and y >= 30:
+                        artil.update(x, y)
             elif event.type == KEYDOWN:
                 if event.key == K_ESCAPE:
                     board.menu()
+        screen.fill((42, 92, 3))
         board.render()
+        all_sprites.draw(screen)
         pygame.display.flip()
         clock.tick(60)
     pygame.quit()
