@@ -1,16 +1,15 @@
 import os
 import random
 import sys
-
 from pygame.locals import *
 import pygame
 pygame.init()
 # 0 - вода
 # 1 - выделенная клетка
 # 2 - земля
-# 3 - железо
-# 4 - дерево
-# 5 - нефть
+# 3 - железо(5)
+# 4 - дерево(10)
+# 5 - нефть(3)
 # 9 - артиллерия
 # 10 - пехота
 # 20 - мотопехота
@@ -45,9 +44,9 @@ class InputBox:
 
     def handle_event(self, event):
         if event.type == pygame.MOUSEBUTTONDOWN:
-                # If the user clicked on the input_box rect.
+            # If the user clicked on the input_box rect.
             if self.rect.collidepoint(event.pos):
-                    # Toggle the active variable.
+                # Toggle the active variable.
                 self.active = not self.active
             else:
                 self.active = False
@@ -134,7 +133,7 @@ class Board:
         self.width = width
         self.height = height
         self.board = []
-        self.color = {0: (0, 0, 255), 1: (255, 255, 255), 2: (0, 255, 0)}
+        self.resources = {3: 5, 4: 10, 5: 3}
         for i in range(height):
             if i < 5 or i > 29:
                 self.board.append([0] * width)
@@ -144,11 +143,28 @@ class Board:
                     if j < 5 or j > 57:
                         col.append(0)
                     elif 5 <= j < 20 or 42 < j <= 57:
-                        col.append(random.choice([0, 0, 0, 0, 2]))
+                        a = random.choice([0, 0, 0, 0, 2])
+                        if a == 2:
+                            a = random.choice([2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 4, 4, 4])
+                            if a != 2:
+                                print(self.resources[a])
+                        col.append(a)
                     elif 5 <= j < 20 or 42 < j <= 57:
                         col.append(random.choice([0, 2]))
                     else:
                         col.append(random.choice([0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]))
+                self.board.append(col)
+            elif 10 <= i < 15 or 19 < i <= 24:
+                col = []
+                for j in range(width):
+                    if j < 5 or j > 57:
+                        col.append(0)
+                    elif 5 <= j < 20 or 42 < j <= 57:
+                        col.append(random.choice([0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]))
+                    elif 20 <= j < 25 or 37 < j <= 42:
+                        col.append(random.choice([0, 2, 2, 2, 2, 2, 2, 2]))
+                    else:
+                        col.append(random.choice([0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]))
                 self.board.append(col)
             else:
                 col = []
@@ -172,13 +188,28 @@ class Board:
         self.cell_size = cell_size
 
     def render(self):
+        water_image = load_image("SPwater.png")
+        water = pygame.sprite.Sprite(all_sprites)
+        water.image = water_image
+        water.rect = water.image.get_rect()
+        water.rect.x, water.rect.y = 60, 30
         for y in range(self.height):
             for x in range(self.width):
-                position = (x * self.cell_size + self.left, y * self.cell_size + self.top)
+                if self.board[y][x] == 2:
+                    position = (x * self.cell_size + self.left, y * self.cell_size + self.top)
+                    size = self.cell_size, self.cell_size
+                    field_image = load_image("grass.png")
+                    field = pygame.sprite.Sprite(all_sprites)
+                    field.image = field_image
+                    field.rect = field.image.get_rect()
+                    pygame.draw.rect(screen, (128, 128, 128), (position, size), 1)
+                    field.rect.x, field.rect.y = position[0], position[1]
+            if y <= 10:
+                position = (30, y * 2 * self.cell_size + self.top)
                 size = self.cell_size, self.cell_size
-                pygame.draw.rect(screen, (128, 128, 128), (position, size), 1)
-                pygame.draw.rect(screen, self.color[int(self.board[y][x])], ((position[0] + 1, position[1] + 1),
-                                                                             (size[0] - 2, size[1] - 2)), 0)
+                pygame.draw.rect(screen, (255, 215, 0), (position, size), 1)
+        Artillery(all_sprites).update(30, self.top)
+        Soldier(all_sprites).update(30, self.cell_size * 2 + self.top)
 
     def on_click(self, cell):
         pass
@@ -327,10 +358,12 @@ if __name__ == '__main__':
                 x, y = event.pos
                 if event.button == 1:
                     board.get_click(event.pos)
-                artil.update(x, y)
+                    if x >= 60 and y >= 30:
+                        artil.update(x, y)
             elif event.type == KEYDOWN:
                 if event.key == K_ESCAPE:
                     board.menu()
+        screen.fill((42, 92, 3))
         board.render()
         all_sprites.draw(screen)
         pygame.display.flip()
