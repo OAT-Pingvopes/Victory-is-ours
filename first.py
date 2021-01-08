@@ -4,12 +4,14 @@ import sys
 from pygame.locals import *
 import pygame
 pygame.init()
+c = 0
 # 0 - вода
 # 1 - выделенная клетка
 # 2 - земля
-# 3 - железо(5)
+# 3 - железо(6)
 # 4 - дерево(10)
-# 5 - нефть(3)
+# 5 - нефть(4)
+# 6 - вольфрам(3)
 # 9 - артиллерия
 # 10 - пехота
 # 20 - мотопехота
@@ -20,6 +22,9 @@ all_sprites = pygame.sprite.Group()
 COLOR_INACTIVE = pygame.Color('lightskyblue3')
 COLOR_ACTIVE = pygame.Color('dodgerblue2')
 FONT = pygame.font.Font(None, 32)
+pygame.mixer.music.load('data/Егор Летов - Моя оборона.mp3')
+pygame.mixer.music.set_volume(0.1)
+pygame.mixer.music.play(-1)
 
 
 def load_image(name, colorkey=None):
@@ -133,7 +138,12 @@ class Board:
         self.width = width
         self.height = height
         self.board = []
-        self.resources = {3: 5, 4: 10, 5: 3}
+        self.resources1_1 = {3: 7, 4: 30, 5: 3, 6: 4}
+        self.resources1_2 = {3: 7, 4: 30, 5: 3, 6: 4}
+        self.resources2_1 = {3: 7, 4: 30, 5: 3, 6: 4}
+        self.resources2_2 = {3: 7, 4: 30, 5: 3, 6: 4}
+        self.resources3_1 = {3: 7, 4: 30, 5: 3, 6: 4}
+        self.resources3_2 = {3: 7, 4: 30, 5: 3, 6: 4}
         for i in range(height):
             if i < 5 or i > 29:
                 self.board.append([0] * width)
@@ -142,45 +152,209 @@ class Board:
                 for j in range(width):
                     if j < 5 or j > 57:
                         col.append(0)
-                    elif 5 <= j < 20 or 42 < j <= 57:
-                        a = random.choice([0, 0, 0, 0, 2])
+                    elif 5 <= j < 20:
+                        a = random.choice([0, 0, 0, 2])
                         if a == 2:
-                            a = random.choice([2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 4, 4, 4])
-                            if a != 2:
-                                print(self.resources[a])
+                            a = random.choice([2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 4, 4, 4])
+                            if a != 2 and self.resources1_1[a] != 0:
+                                self.resources1_1[a] -= 1
+                            else:
+                                a = 2
                         col.append(a)
-                    elif 5 <= j < 20 or 42 < j <= 57:
-                        col.append(random.choice([0, 2]))
-                    else:
-                        col.append(random.choice([0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]))
+                    elif 42 < j <= 57:
+                        a = random.choice([0, 0, 0, 2])
+                        if a == 2:
+                            a = random.choice([2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 4, 4, 4])
+                            if a != 2 and self.resources1_2[a] != 0:
+                                self.resources1_2[a] -= 1
+                            else:
+                                a = 2
+                        col.append(a)
+                    elif 20 <= j < 33:
+                        a = random.choice([0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2])
+                        if a == 2:
+                            a = random.choice([2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 5, 6, 6, 5, 4, 4])
+                            if a != 2 and self.resources1_1[a] != 0:
+                                self.resources1_1[a] -= 1
+                            else:
+                                a = 2
+                        col.append(a)
+                    elif 33 <= j < 42:
+                        a = random.choice([0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2])
+                        if a == 2:
+                            a = random.choice([2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 5, 6, 6, 5, 4, 4])
+                            if a != 2 and self.resources1_2[a] != 0:
+                                self.resources1_2[a] -= 1
+                            else:
+                                a = 2
+                        col.append(a)
+                col.append(0)
                 self.board.append(col)
             elif 10 <= i < 15 or 19 < i <= 24:
                 col = []
                 for j in range(width):
                     if j < 5 or j > 57:
                         col.append(0)
-                    elif 5 <= j < 20 or 42 < j <= 57:
-                        col.append(random.choice([0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]))
-                    elif 20 <= j < 25 or 37 < j <= 42:
-                        col.append(random.choice([0, 2, 2, 2, 2, 2, 2, 2]))
-                    else:
-                        col.append(random.choice([0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]))
+                    elif 5 <= j < 20:
+                        a = random.choice([0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2])
+                        if a == 2:
+                            a = random.choice([2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 4, 4, 4])
+                            if a != 2 and self.resources2_1[a] != 0:
+                                self.resources2_1[a] -= 1
+                            else:
+                                a = 2
+                        col.append(a)
+                    elif 42 < j <= 57:
+                        a = random.choice([0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2])
+                        if a == 2:
+                            a = random.choice([2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 4, 4, 4])
+                            if a != 2 and self.resources2_2[a] != 0:
+                                self.resources2_2[a] -= 1
+                            else:
+                                a = 2
+                        col.append(a)
+                    elif 20 <= j < 25:
+                        a = random.choice([0, 2, 2, 2, 2, 2, 2, 2])
+                        if a == 2:
+                            a = random.choice([2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 4, 4, 4])
+                            if a != 2 and self.resources2_1[a] != 0:
+                                self.resources2_1[a] -= 1
+                            else:
+                                a = 2
+                        col.append(a)
+                    elif 37 < j <= 42:
+                        a = random.choice([0, 2, 2, 2, 2, 2, 2, 2])
+                        if a == 2:
+                            a = random.choice([2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 4, 4, 4])
+                            if a != 2 and self.resources2_2[a] != 0:
+                                self.resources2_2[a] -= 1
+                            else:
+                                a = 2
+                        col.append(a)
+                    elif 25 <= j < 31:
+                        a = random.choice([0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2])
+                        if a == 2:
+                            a = random.choice([2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 5, 6, 6, 5, 4, 4])
+                            if a != 2 and self.resources2_1[a] != 0:
+                                self.resources2_1[a] -= 1
+                            else:
+                                a = 2
+                        col.append(a)
+                    elif 31 <= j < 37:
+                        a = random.choice([0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2])
+                        if a == 2:
+                            a = random.choice([2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 5, 6, 6, 5, 4, 4])
+                            if a != 2 and self.resources2_2[a] != 0:
+                                self.resources2_2[a] -= 1
+                            else:
+                                a = 2
+                        col.append(a)
+                col.append(0)
                 self.board.append(col)
             else:
                 col = []
                 for j in range(width):
                     if j < 5 or j > 57:
                         col.append(0)
-                    elif 5 <= j < 20 or 42 < j <= 57:
-                        col.append(random.choice([0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]))
-                    elif 20 <= j < 25 or 37 < j <= 42:
-                        col.append(random.choice([0, 2, 2, 2, 2, 2, 2, 2]))
-                    else:
-                        col.append(random.choice([0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]))
+                    elif 5 <= j < 20:
+                        a = random.choice([0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2])
+                        if a == 2:
+                            a = random.choice([2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 4, 4, 4])
+                            if a != 2 and self.resources3_1[a] != 0:
+                                self.resources3_1[a] -= 1
+                            else:
+                                a = 2
+                        col.append(a)
+                    elif 42 < j <= 57:
+                        a = random.choice([0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2])
+                        if a == 2:
+                            a = random.choice([2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 4, 4, 4])
+                            if a != 2 and self.resources3_2[a] != 0:
+                                self.resources3_2[a] -= 1
+                            else:
+                                a = 2
+                        col.append(a)
+                    elif 20 <= j < 25:
+                        a = random.choice([0, 2, 2, 2, 2, 2, 2, 2])
+                        if a == 2:
+                            a = random.choice([2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 4, 4, 4])
+                            if a != 2 and self.resources3_1[a] != 0:
+                                self.resources3_1[a] -= 1
+                            else:
+                                a = 2
+                        col.append(a)
+                    elif 37 < j <= 42:
+                        a = random.choice([0, 2, 2, 2, 2, 2, 2, 2])
+                        if a == 2:
+                            a = random.choice([2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 4, 4, 4])
+                            if a != 2 and self.resources3_1[a] != 0:
+                                self.resources3_1[a] -= 1
+                            else:
+                                a = 2
+                        col.append(a)
+                    elif 25 <= j < 31:
+                        a = random.choice([0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2])
+                        if a == 2:
+                            a = random.choice([2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 5, 6, 6, 5, 4, 4])
+                            if a != 2 and self.resources3_1[a] != 0:
+                                self.resources3_1[a] -= 1
+                            else:
+                                a = 2
+                        col.append(a)
+                    elif 31 <= j < 37:
+                        a = random.choice([0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2])
+                        if a == 2:
+                            a = random.choice([2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 5, 6, 6, 5, 4, 4])
+                            if a != 2 and self.resources3_2[a] != 0:
+                                self.resources3_2[a] -= 1
+                            else:
+                                a = 2
+                        col.append(a)
+                col.append(0)
                 self.board.append(col)
         self.left = 60
         self.top = 30
         self.cell_size = 30
+
+    def place_of_war(self):
+        for y in range(self.height):
+            for x in range(self.width):
+                position = (x * self.cell_size + self.left, y * self.cell_size + self.top)
+                size = self.cell_size, self.cell_size
+                if self.board[y][x] == 2:
+                    field_image = load_image("grass.png")
+                    field = pygame.sprite.Sprite(all_sprites)
+                    field.image = field_image
+                    field.rect = field.image.get_rect()
+                    field.rect.x, field.rect.y = position[0], position[1]
+                elif self.board[y][x] == 3:
+                    field_image = load_image("iron.png")
+                    field = pygame.sprite.Sprite(all_sprites)
+                    field.image = field_image
+                    field.rect = field.image.get_rect()
+                    field.rect.x, field.rect.y = position[0], position[1]
+                elif self.board[y][x] == 4:
+                    field_image = load_image("tree.png")
+                    field = pygame.sprite.Sprite(all_sprites)
+                    field.image = field_image
+                    field.rect = field.image.get_rect()
+                    field.rect.x, field.rect.y = position[0], position[1]
+                elif self.board[y][x] == 5:
+                    field_image = load_image("oil.png")
+                    field = pygame.sprite.Sprite(all_sprites)
+                    field.image = field_image
+                    field.rect = field.image.get_rect()
+                    field.rect.x, field.rect.y = position[0], position[1]
+                elif self.board[y][x] == 6:
+                    field_image = load_image("wolfram.png")
+                    field = pygame.sprite.Sprite(all_sprites)
+                    field.image = field_image
+                    field.rect = field.image.get_rect()
+                    field.rect.x, field.rect.y = position[0], position[1]
+                if y <= 10:
+                    position = (30, y * 2 * self.cell_size + self.top)
+                    size = self.cell_size, self.cell_size
+                    pygame.draw.rect(screen, (255, 215, 0), (position, size), 1)
 
     def set_view(self, left, top, cell_size):
         self.left = left
@@ -188,30 +362,13 @@ class Board:
         self.cell_size = cell_size
 
     def render(self):
+        screen.fill((42, 92, 3))
+        pygame.draw.rect(screen, (10, 96, 150), (60, 30, 1860, 1050))
         for y in range(self.height):
             for x in range(self.width):
-                if self.board[y][x] == 2:
-                    position = (x * self.cell_size + self.left, y * self.cell_size + self.top)
-                    size = self.cell_size, self.cell_size
-                    field_image = load_image("grass.png")
-                    field = pygame.sprite.Sprite(all_sprites)
-                    field.image = field_image
-                    field.rect = field.image.get_rect()
-                    pygame.draw.rect(screen, (128, 128, 128), (position, size), 1)
-                    field.rect.x, field.rect.y = position[0], position[1]
-                elif self.board[y][x] == 0:
-                    position = (x * self.cell_size + self.left, y * self.cell_size + self.top)
-                    size = self.cell_size, self.cell_size
-                    field_image = load_image("SPwater.png")
-                    field = pygame.sprite.Sprite(all_sprites)
-                    field.image = field_image
-                    field.rect = field.image.get_rect()
-                    pygame.draw.rect(screen, (128, 128, 128), (position, size), 1)
-                    field.rect.x, field.rect.y = position[0], position[1]
-            if y <= 10:
-                position = (30, y * 2 * self.cell_size + self.top)
+                position = (x * self.cell_size + self.left, y * self.cell_size + self.top)
                 size = self.cell_size, self.cell_size
-                pygame.draw.rect(screen, (255, 215, 0), (position, size), 1)
+                pygame.draw.rect(screen, (128, 128, 128), (position, size), 1)
         Artillery(all_sprites).update(30, self.top)
         Soldier(all_sprites).update(30, self.cell_size * 2 + self.top)
 
@@ -354,6 +511,7 @@ if __name__ == '__main__':
     running = True
     soldat = Soldier(all_sprites)
     artil = Artillery(all_sprites)
+    board.place_of_war()
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -367,7 +525,6 @@ if __name__ == '__main__':
             elif event.type == KEYDOWN:
                 if event.key == K_ESCAPE:
                     board.menu()
-        screen.fill((42, 92, 3))
         board.render()
         all_sprites.draw(screen)
         pygame.display.flip()
