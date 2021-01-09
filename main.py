@@ -322,7 +322,7 @@ class Board:
         board_local = []
         for i in range(len(load_file)):
             preobraz = load_file[i].strip()[1:-1]
-            preobraz = list(map(str.strip, preobraz.split(',')))
+            preobraz = list(map(int, preobraz.split(',')))
             board_local.append(preobraz)
         self.board = board_local
         self.place_of_war()
@@ -425,6 +425,7 @@ class Board:
         input_box1 = InputBox(1700, 1000, 200, 32)
         input_boxes = [input_box1]
         show = True
+        print(self.board)
         while show:
             for event in pygame.event.get():
                 if event.type == pygame.MOUSEBUTTONDOWN:
@@ -444,7 +445,6 @@ class Board:
                         show = False
                     elif load.pressed(event.pos):
                         self.load_saves()
-                        self.place_of_war()
                     if reg.pressed(event.pos):
                         input_box1.register()
 
