@@ -425,7 +425,6 @@ class Board:
         input_box1 = InputBox(1700, 1000, 200, 32)
         input_boxes = [input_box1]
         show = True
-        print(self.board)
         while show:
             for event in pygame.event.get():
                 if event.type == pygame.MOUSEBUTTONDOWN:
