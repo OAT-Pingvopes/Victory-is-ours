@@ -19,6 +19,7 @@ c = 0
 # 40 - самолёт
 # 50 - вертолёт
 all_sprites = pygame.sprite.Group()
+units_sprites = pygame.sprite.Group()
 COLOR_INACTIVE = pygame.Color('lightskyblue3')
 COLOR_ACTIVE = pygame.Color('dodgerblue2')
 FONT = pygame.font.Font(None, 32)
@@ -317,6 +318,13 @@ class Board:
         self.cell_size = 30
 
     def place_of_war(self):
+        field_image = load_image("frame.png")
+        field = pygame.sprite.Sprite(all_sprites)
+        field.image = field_image
+        field.rect = field.image.get_rect()
+        field.rect.x, field.rect.y = 0, 0
+        screen.fill((42, 92, 3))
+        pygame.draw.rect(screen, (10, 96, 150), (60, 30, 1860, 1050))
         for y in range(self.height):
             for x in range(self.width):
                 position = (x * self.cell_size + self.left, y * self.cell_size + self.top)
@@ -362,15 +370,17 @@ class Board:
         self.cell_size = cell_size
 
     def render(self):
-        screen.fill((42, 92, 3))
-        pygame.draw.rect(screen, (10, 96, 150), (60, 30, 1860, 1050))
+        step = Button()
+        Artillery(units_sprites).update(30, self.top)
+        Soldier(units_sprites).update(30, self.cell_size * 2 + self.top)
+        Tank(units_sprites).update(30, self.cell_size * 4 + self.top)
+        MotoBrigada(units_sprites).update(30, self.cell_size * 6 + self.top)
         for y in range(self.height):
             for x in range(self.width):
                 position = (x * self.cell_size + self.left, y * self.cell_size + self.top)
                 size = self.cell_size, self.cell_size
                 pygame.draw.rect(screen, (128, 128, 128), (position, size), 1)
-        Artillery(all_sprites).update(30, self.top)
-        Soldier(all_sprites).update(30, self.cell_size * 2 + self.top)
+        step.create_button(screen, (34, 139, 34), 1700, 1010, 200, 50, 100, 'Закончить ход', (255, 255, 255))
 
     def on_click(self, cell):
         pass
@@ -499,6 +509,32 @@ class Artillery(Unit):
         self.rect.y = -30
 
 
+class Tank(Unit):
+    image = load_image('tank.png')
+
+    def __init__(self, *group):
+        # НЕОБХОДИМО вызвать конструктор родительского класса Sprite.
+        # Это очень важно!!!
+        super().__init__(*group)
+        self.image = Tank.image
+        self.rect = self.image.get_rect()
+        self.rect.x = -30
+        self.rect.y = -30
+
+
+class MotoBrigada(Unit):
+    image = load_image('moto_brigada.png')
+
+    def __init__(self, *group):
+        # НЕОБХОДИМО вызвать конструктор родительского класса Sprite.
+        # Это очень важно!!!
+        super().__init__(*group)
+        self.image = MotoBrigada.image
+        self.rect = self.image.get_rect()
+        self.rect.x = -30
+        self.rect.y = -30
+
+
 if __name__ == '__main__':
     fps = 60  # количество кадров в секунду
     clock = pygame.time.Clock()
@@ -509,24 +545,45 @@ if __name__ == '__main__':
     board.menu()
     board.set_view(60, 30, 30)
     running = True
-    soldat = Soldier(all_sprites)
-    artil = Artillery(all_sprites)
+    soldat = Soldier(units_sprites)
+    artil = Artillery(units_sprites)
+    tank = Tank(units_sprites)
+    moto = MotoBrigada(units_sprites)
     board.place_of_war()
+    d = 0
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
             if event.type == pygame.MOUSEBUTTONDOWN:
                 x, y = event.pos
+                board.get_click(event.pos)
                 if event.button == 1:
-                    board.get_click(event.pos)
-                    if x >= 60 and y >= 30:
+                    if 30 <= x <= 60 and 30 <= y <= 60:
+                        d = 1
+                    if 90 <= y <= 120 and 30 <= x <= 60:
+                        d = 2
+                    if 150 <= y <= 180 and 30 <= x <= 60:
+                        d = 3
+                    if 210 <= y <= 240 and 30 <= x <= 60:
+                        d = 4
+                if event.button == 3 and x >= 60 and y >= 30:
+                    if d == 1:
                         artil.update(x, y)
+                    elif d == 2:
+                        soldat.update(x, y)
+                    elif d == 3:
+                        tank.update(x, y)
+                    elif d == 4:
+                        moto.update(x, y)
             elif event.type == KEYDOWN:
                 if event.key == K_ESCAPE:
                     board.menu()
-        board.render()
+        screen.fill((42, 92, 3))
+        pygame.draw.rect(screen, (10, 96, 150), (60, 30, 1860, 1050))
         all_sprites.draw(screen)
+        board.render()
+        units_sprites.draw(screen)
         pygame.display.flip()
         clock.tick(60)
     pygame.quit()
