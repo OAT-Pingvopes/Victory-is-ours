@@ -319,12 +319,7 @@ class Board:
 
     def load_saves(self):
         load_file = open('data/save.txt', mode='r').readlines()
-        board_local = []
-        for i in range(len(load_file)):
-            preobraz = load_file[i].strip()[1:-1]
-            preobraz = list(map(int, preobraz.split(',')))
-            board_local.append(preobraz)
-        self.board = board_local
+        exec(load_file[0])
         self.place_of_war()
 
 
@@ -438,12 +433,12 @@ class Board:
                         self.b = 1
                     elif save.pressed(event.pos) and self.b == 1:
                         file = open('data/save.txt', 'w')
-                        for x in self.board:
-                            file.write(str(x) + '\n')
+                        file.write(f'self.board = {str(self.board)}')
                         file.close()
                         show = False
                     elif load.pressed(event.pos):
                         self.load_saves()
+                        show = False
                     if reg.pressed(event.pos):
                         input_box1.register()
 
