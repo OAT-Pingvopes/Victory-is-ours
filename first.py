@@ -12,14 +12,17 @@ c = 0
 # 4 - дерево(10)
 # 5 - нефть(4)
 # 6 - вольфрам(3)
-# 9 - артиллерия
-# 10 - пехота
-# 20 - мотопехота
-# 30 - танк
-# 40 - самолёт
-# 50 - вертолёт
+# 10 - артиллерия
+# 20 - пехота
+# 30 - мотопехота
+# 40 - танк
+# 100 - дом лесника
+# 200 - рудник железа
+# 300 - нефтекачалка
+# 400 - рудник вольфрама
 all_sprites = pygame.sprite.Group()
 units_sprites = pygame.sprite.Group()
+builds_sprites = pygame.sprite.Group()
 COLOR_INACTIVE = pygame.Color('lightskyblue3')
 COLOR_ACTIVE = pygame.Color('dodgerblue2')
 FONT = pygame.font.Font(None, 32)
@@ -317,14 +320,17 @@ class Board:
         self.top = 30
         self.cell_size = 30
 
+    def load_saves(self):
+        load_file = open('data/save.txt', mode='r').readlines()
+        exec(load_file[0])
+        self.place_of_war()
+
     def place_of_war(self):
         field_image = load_image("frame.png")
         field = pygame.sprite.Sprite(all_sprites)
         field.image = field_image
         field.rect = field.image.get_rect()
         field.rect.x, field.rect.y = 0, 0
-        screen.fill((42, 92, 3))
-        pygame.draw.rect(screen, (10, 96, 150), (60, 30, 1860, 1050))
         for y in range(self.height):
             for x in range(self.width):
                 position = (x * self.cell_size + self.left, y * self.cell_size + self.top)
@@ -375,6 +381,10 @@ class Board:
         Soldier(units_sprites).update(30, self.cell_size * 2 + self.top)
         Tank(units_sprites).update(30, self.cell_size * 4 + self.top)
         MotoBrigada(units_sprites).update(30, self.cell_size * 6 + self.top)
+        Forester(builds_sprites).update(30, self.cell_size * 8 + self.top)
+        IronMine(builds_sprites).update(30, self.cell_size * 10 + self.top)
+        OilPump(builds_sprites).update(30, self.cell_size * 12 + self.top)
+        WolframMine(builds_sprites).update(30, self.cell_size * 14 + self.top)
         for y in range(self.height):
             for x in range(self.width):
                 position = (x * self.cell_size + self.left, y * self.cell_size + self.top)
@@ -432,12 +442,12 @@ class Board:
                         self.b = 1
                     elif save.pressed(event.pos) and self.b == 1:
                         file = open('data/save.txt', 'w')
-                        for x in self.board:
-                            file.write(str(x) + '\n')
+                        file.write(f'self.board = {str(self.board)}')
                         file.close()
                         show = False
                     elif load.pressed(event.pos):
-                        pass
+                        self.load_saves()
+                        show = False
                     if reg.pressed(event.pos):
                         input_box1.register()
 
@@ -465,6 +475,63 @@ class Board:
             pygame.display.update()
             clock.tick(60)
         screen.fill('black')
+
+
+class Build(pygame.sprite.Sprite):
+    def __init__(self, *group):
+        super().__init__(*group)
+        self.left = 60
+        self.top = 30
+        self.cell_size = 30
+
+    def update(self, x, y):
+        cell_x = (x - self.left) // self.cell_size
+        cell_y = (y - self.top) // self.cell_size
+        self.rect.x = self.left + cell_x * 30
+        self.rect.y = self.top + cell_y * 30
+
+class Forester(Build):
+    image = load_image('house_of_forester.png')
+
+    def __init__(self, *group):
+        super().__init__(*group)
+        self.image = Forester.image
+        self.rect = self.image.get_rect()
+        self.rect.x = -30
+        self.rect.y = -30
+
+
+class IronMine(Build):
+    image = load_image('rudnik-iron.png')
+
+    def __init__(self, *group):
+        super().__init__(*group)
+        self.image = IronMine.image
+        self.rect = self.image.get_rect()
+        self.rect.x = -30
+        self.rect.y = -30
+
+
+class WolframMine(Build):
+    image = load_image('rudnik-wolfram.png')
+
+    def __init__(self, *group):
+        super().__init__(*group)
+        self.image = WolframMine.image
+        self.rect = self.image.get_rect()
+        self.rect.x = -30
+        self.rect.y = -30
+
+
+class OilPump(Build):
+    image = load_image('oil_pumpers.png')
+
+    def __init__(self, *group):
+        super().__init__(*group)
+        self.image = OilPump.image
+        self.rect = self.image.get_rect()
+        self.rect.x = -30
+        self.rect.y = -30
 
 
 class Unit(pygame.sprite.Sprite):
@@ -549,7 +616,12 @@ if __name__ == '__main__':
     artil = Artillery(units_sprites)
     tank = Tank(units_sprites)
     moto = MotoBrigada(units_sprites)
+    forest = Forester(builds_sprites)
+    iron = IronMine(builds_sprites)
+    wolfram = WolframMine(builds_sprites)
+    oil = OilPump(builds_sprites)
     board.place_of_war()
+    units = {}
     d = 0
     while running:
         for event in pygame.event.get():
@@ -560,22 +632,29 @@ if __name__ == '__main__':
                 board.get_click(event.pos)
                 if event.button == 1:
                     if 30 <= x <= 60 and 30 <= y <= 60:
-                        d = 1
+                        d = 10
                     if 90 <= y <= 120 and 30 <= x <= 60:
-                        d = 2
+                        d = 20
                     if 150 <= y <= 180 and 30 <= x <= 60:
-                        d = 3
+                        d = 30
                     if 210 <= y <= 240 and 30 <= x <= 60:
-                        d = 4
+                        d = 40
                 if event.button == 3 and x >= 60 and y >= 30:
-                    if d == 1:
-                        artil.update(x, y)
-                    elif d == 2:
-                        soldat.update(x, y)
-                    elif d == 3:
-                        tank.update(x, y)
-                    elif d == 4:
-                        moto.update(x, y)
+                    cell_x = (x - 60) // 30
+                    cell_y = (y - 30) // 30
+                    if (cell_x, cell_y) not in units.keys():
+                        if d == 10:
+                            artil.update(x, y)
+                            units[(cell_x, cell_y)] = 10
+                        elif d == 20:
+                            soldat.update(x, y)
+                            units[(cell_x, cell_y)] = 20
+                        elif d == 30:
+                            tank.update(x, y)
+                            units[(cell_x, cell_y)] = 30
+                        elif d == 40:
+                            moto.update(x, y)
+                            units[(cell_x, cell_y)] = 40
             elif event.type == KEYDOWN:
                 if event.key == K_ESCAPE:
                     board.menu()
@@ -584,6 +663,7 @@ if __name__ == '__main__':
         all_sprites.draw(screen)
         board.render()
         units_sprites.draw(screen)
+        builds_sprites.draw(screen)
         pygame.display.flip()
         clock.tick(60)
     pygame.quit()
