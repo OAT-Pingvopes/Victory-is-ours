@@ -142,12 +142,12 @@ class Board:
         self.width = width
         self.height = height
         self.board = []
-        self.resources1_1 = {3: 7, 4: 30, 5: 3, 6: 4}
-        self.resources1_2 = {3: 7, 4: 30, 5: 3, 6: 4}
-        self.resources2_1 = {3: 7, 4: 30, 5: 3, 6: 4}
-        self.resources2_2 = {3: 7, 4: 30, 5: 3, 6: 4}
-        self.resources3_1 = {3: 7, 4: 30, 5: 3, 6: 4}
-        self.resources3_2 = {3: 7, 4: 30, 5: 3, 6: 4}
+        self.resources1_1 = {3: 9, 4: 30, 5: 3, 6: 4}
+        self.resources1_2 = {3: 9, 4: 30, 5: 3, 6: 4}
+        self.resources2_1 = {3: 9, 4: 30, 5: 3, 6: 4}
+        self.resources2_2 = {3: 9, 4: 30, 5: 3, 6: 4}
+        self.resources3_1 = {3: 9, 4: 30, 5: 3, 6: 4}
+        self.resources3_2 = {3: 9, 4: 30, 5: 3, 6: 4}
         for i in range(height):
             if i < 5 or i > 29:
                 self.board.append([0] * width)
@@ -390,6 +390,14 @@ class Board:
                 position = (x * self.cell_size + self.left, y * self.cell_size + self.top)
                 size = self.cell_size, self.cell_size
                 pygame.draw.rect(screen, (128, 128, 128), (position, size), 1)
+                if self.board[y][x] == 100:
+                    Forester(units_sprites).update(position[0], position[1])
+                elif self.board[y][x] == 200:
+                    IronMine(units_sprites).update(position[0], position[1])
+                elif self.board[y][x] == 300:
+                    OilPump(units_sprites).update(position[0], position[1])
+                elif self.board[y][x] == 400:
+                    WolframMine(units_sprites).update(position[0], position[1])
         step.create_button(screen, (34, 139, 34), 1700, 1010, 200, 50, 100, 'Закончить ход', (255, 255, 255))
 
     def on_click(self, cell):
@@ -412,12 +420,17 @@ class Board:
                             for j in range(len(self.board[x])):
                                 if self.board[i][j] == 1:
                                     self.board[i][j] = 2
-                        self.board[x][y] = 1
         return cell_x, cell_y
 
     def get_click(self, mouse_pos):
         cell = self.get_cell(mouse_pos)
         self.on_click(cell)
+
+    def get_board(self):
+        return self.board
+
+    def update_board(self, board):
+        self.board = board
 
     def menu(self):
         background = pygame.image.load('data/start_menu.png')
@@ -489,6 +502,7 @@ class Build(pygame.sprite.Sprite):
         cell_y = (y - self.top) // self.cell_size
         self.rect.x = self.left + cell_x * 30
         self.rect.y = self.top + cell_y * 30
+
 
 class Forester(Build):
     image = load_image('house_of_forester.png')
@@ -616,13 +630,11 @@ if __name__ == '__main__':
     artil = Artillery(units_sprites)
     tank = Tank(units_sprites)
     moto = MotoBrigada(units_sprites)
-    forest = Forester(builds_sprites)
-    iron = IronMine(builds_sprites)
-    wolfram = WolframMine(builds_sprites)
-    oil = OilPump(builds_sprites)
     board.place_of_war()
+    brd = board.get_board()
     units = {}
     d = 0
+    resource = {3: 0, 4: 1, 5: 0, 6: 0}
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -639,22 +651,54 @@ if __name__ == '__main__':
                         d = 30
                     if 210 <= y <= 240 and 30 <= x <= 60:
                         d = 40
-                if event.button == 3 and x >= 60 and y >= 30:
+                    if 270 <= y <= 300 and 30 <= x <= 60:
+                        d = 100
+                    if 330 <= y <= 360 and 30 <= x <= 60:
+                        d = 200
+                    if 390 <= y <= 420 and 30 <= x <= 60:
+                        d = 300
+                    if 450 <= y <= 480 and 30 <= x <= 60:
+                        d = 400
+                if event.button == 3:
                     cell_x = (x - 60) // 30
                     cell_y = (y - 30) // 30
-                    if (cell_x, cell_y) not in units.keys():
-                        if d == 10:
+                    if brd[cell_y][cell_x] in [1, 2, 3, 4, 5, 6]:
+                        if d == 10 and resource[4] >= 2 and resource[3] >= 2:
                             artil.update(x, y)
-                            units[(cell_x, cell_y)] = 10
-                        elif d == 20:
+                            resource[4] -= 1
+                            resource[3] -= 2
+                        elif d == 20 and resource[4] >= 2 and resource[3] >= 1:
                             soldat.update(x, y)
-                            units[(cell_x, cell_y)] = 20
-                        elif d == 30:
+                            resource[4] -= 1
+                            resource[3] -= 1
+                        elif d == 30 and resource[3] >= 3 and resource[5] >= 1 and resource[6] >= 1:
                             tank.update(x, y)
-                            units[(cell_x, cell_y)] = 30
-                        elif d == 40:
+                            resource[3] -= 3
+                            resource[5] -= 1
+                            resource[6] -= 1
+                        elif d == 40 and resource[3] >= 2 and resource[4] >= 1 and resource[5] >= 1:
                             moto.update(x, y)
-                            units[(cell_x, cell_y)] = 40
+                            resource[4] -= 1
+                            resource[3] -= 2
+                            resource[5] -= 1
+                        elif d == 100 and brd[cell_y][cell_x] == 4 and resource[4] >= 1:
+                            brd[cell_y][cell_x] = 100
+                            resource[4] += 1
+                        elif d == 200 and brd[cell_y][cell_x] == 3 and resource[4] >= 2:
+                            brd[cell_y][cell_x] = 200
+                            resource[3] += 1
+                            resource[4] -= 1
+                        elif d == 400 and brd[cell_y][cell_x] == 6 and resource[3] >= 2 and resource[5] >= 1:
+                            brd[cell_y][cell_x] = 400
+                            resource[6] += 1
+                            resource[4] -= 2
+                            resource[5] -= 1
+                        elif d == 300 and brd[cell_y][cell_x] == 5 and resource[4] >= 3 and resource[3] >= 2:
+                            brd[cell_y][cell_x] = 300
+                            resource[5] += 1
+                            resource[4] -= 2
+                            resource[3] -= 2
+                        board.update_board(brd)
             elif event.type == KEYDOWN:
                 if event.key == K_ESCAPE:
                     board.menu()
@@ -662,8 +706,8 @@ if __name__ == '__main__':
         pygame.draw.rect(screen, (10, 96, 150), (60, 30, 1860, 1050))
         all_sprites.draw(screen)
         board.render()
-        units_sprites.draw(screen)
         builds_sprites.draw(screen)
+        units_sprites.draw(screen)
         pygame.display.flip()
         clock.tick(60)
     pygame.quit()
