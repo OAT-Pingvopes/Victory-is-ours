@@ -1,10 +1,15 @@
 import os
 import random
 import sys
+import socket
 from pygame.locals import *
 import pygame
 pygame.init()
+step_of_user = 0
 c = 0
+sock = socket.socket()
+server = ''
+port = 5050
 # 0 - вода
 # 1 - выделенная клетка
 # 2 - земля
@@ -12,14 +17,17 @@ c = 0
 # 4 - дерево(10)
 # 5 - нефть(4)
 # 6 - вольфрам(3)
-# 9 - артиллерия
-# 10 - пехота
-# 20 - мотопехота
-# 30 - танк
-# 40 - самолёт
-# 50 - вертолёт
+# 10 - артиллерия
+# 20 - пехота
+# 30 - мотопехота
+# 40 - танк
+# 100 - дом лесника
+# 200 - рудник железа
+# 300 - нефтекачалка
+# 400 - рудник вольфрама
 all_sprites = pygame.sprite.Group()
 units_sprites = pygame.sprite.Group()
+builds_sprites = pygame.sprite.Group()
 COLOR_INACTIVE = pygame.Color('lightskyblue3')
 COLOR_ACTIVE = pygame.Color('dodgerblue2')
 FONT = pygame.font.Font(None, 32)
@@ -38,6 +46,22 @@ def load_image(name, colorkey=None):
     return image
 
 
+class Red:
+    def __init__(self):
+        self.resource = {3: 0, 4: 1, 5: 0, 6: 0}
+
+    def res(self):
+        return self.resource
+
+
+class Blue:
+    def __init__(self):
+        self.resource = {3: 0, 4: 1, 5: 0, 6: 0}
+
+    def res(self):
+        return self.resource
+
+
 class InputBox:
     def __init__(self, x, y, w, h, text=''):
         self.rect = pygame.Rect(x, y, w, h)
@@ -45,7 +69,10 @@ class InputBox:
         self.text = text
         self.txt_surface = FONT.render(text, True, self.color)
         self.active = False
-        nick = open('data/cfg.txt', mode='r').readlines()[0].split()[2]
+        if x == 1700:
+            nick = open('data/cfg.txt', mode='r').readlines()[0].split()[2]
+        else:
+            nick = ''
         self.txt_surface = FONT.render(nick[1:-1], True, self.color)
 
     def handle_event(self, event):
@@ -75,6 +102,17 @@ class InputBox:
         nick[2] = "'" + self.text + "'"
         f = open('data/cfg.txt', mode='w')
         f.write(' '.join(nick))
+
+    def connect(self):
+        host = self.text
+        port = 5050
+        try:
+            sock.connect((host, port))
+        except:
+            self.answer()
+
+    def answer(self):
+        self.txt_surface = FONT.render('Connection down', True, self.color)
 
     def update(self):
         # Resize the box if the text is too long.
@@ -139,12 +177,12 @@ class Board:
         self.width = width
         self.height = height
         self.board = []
-        self.resources1_1 = {3: 7, 4: 30, 5: 3, 6: 4}
-        self.resources1_2 = {3: 7, 4: 30, 5: 3, 6: 4}
-        self.resources2_1 = {3: 7, 4: 30, 5: 3, 6: 4}
-        self.resources2_2 = {3: 7, 4: 30, 5: 3, 6: 4}
-        self.resources3_1 = {3: 7, 4: 30, 5: 3, 6: 4}
-        self.resources3_2 = {3: 7, 4: 30, 5: 3, 6: 4}
+        self.resources1_1 = {3: 12, 4: 30, 5: 3, 6: 4}
+        self.resources1_2 = {3: 12, 4: 30, 5: 3, 6: 4}
+        self.resources2_1 = {3: 12, 4: 30, 5: 3, 6: 4}
+        self.resources2_2 = {3: 12, 4: 30, 5: 3, 6: 4}
+        self.resources3_1 = {3: 12, 4: 30, 5: 3, 6: 4}
+        self.resources3_2 = {3: 12, 4: 30, 5: 3, 6: 4}
         for i in range(height):
             if i < 5 or i > 29:
                 self.board.append([0] * width)
@@ -322,7 +360,6 @@ class Board:
         exec(load_file[0])
         self.place_of_war()
 
-
     def place_of_war(self):
         field_image = load_image("frame.png")
         field = pygame.sprite.Sprite(all_sprites)
@@ -374,14 +411,30 @@ class Board:
         self.cell_size = cell_size
 
     def render(self):
-        pygame.draw.rect(screen, (10, 96, 150), (60, 30, 1860, 1050))
+        step = Button()
+        Artillery(units_sprites).update(30, self.top)
+        Soldier(units_sprites).update(30, self.cell_size * 2 + self.top)
+        Tank(units_sprites).update(30, self.cell_size * 4 + self.top)
+        MotoBrigada(units_sprites).update(30, self.cell_size * 6 + self.top)
+
+        Forester(builds_sprites).update(30, self.cell_size * 8 + self.top)
+        IronMine(builds_sprites).update(30, self.cell_size * 10 + self.top)
+        OilPump(builds_sprites).update(30, self.cell_size * 12 + self.top)
+        WolframMine(builds_sprites).update(30, self.cell_size * 14 + self.top)
         for y in range(self.height):
             for x in range(self.width):
                 position = (x * self.cell_size + self.left, y * self.cell_size + self.top)
                 size = self.cell_size, self.cell_size
                 pygame.draw.rect(screen, (128, 128, 128), (position, size), 1)
-        Artillery(all_sprites).update(30, self.top)
-        Soldier(all_sprites).update(30, self.cell_size * 2 + self.top)
+                if self.board[y][x] == 100:
+                    Forester(units_sprites).update(position[0], position[1])
+                elif self.board[y][x] == 200:
+                    IronMine(units_sprites).update(position[0], position[1])
+                elif self.board[y][x] == 300:
+                    OilPump(units_sprites).update(position[0], position[1])
+                elif self.board[y][x] == 400:
+                    WolframMine(units_sprites).update(position[0], position[1])
+        step.create_button(screen, (34, 139, 34), 1700, 1010, 200, 50, 100, 'Закончить ход', (255, 255, 255))
 
     def on_click(self, cell):
         pass
@@ -403,22 +456,34 @@ class Board:
                             for j in range(len(self.board[x])):
                                 if self.board[i][j] == 1:
                                     self.board[i][j] = 2
-                        self.board[x][y] = 1
         return cell_x, cell_y
 
     def get_click(self, mouse_pos):
         cell = self.get_cell(mouse_pos)
         self.on_click(cell)
 
+    def get_board(self):
+        return self.board
+
+    def update_board(self, board):
+        self.board = board
+
+    def save(self):
+        file = open('data/save.txt', 'w')
+        file.write(f'self.board = {str(self.board)}')
+        file.close()
+
     def menu(self):
         background = pygame.image.load('data/start_menu.png')
+        connection = Button()
         reg = Button()
         close = Button()
         start = Button()
         save = Button()
         load = Button()
         input_box1 = InputBox(1700, 1000, 200, 32)
-        input_boxes = [input_box1]
+        input_box2 = InputBox(50, 50, 200, 32)
+        input_boxes = [input_box1, input_box2]
         show = True
         while show:
             for event in pygame.event.get():
@@ -429,19 +494,20 @@ class Board:
                     elif start.pressed(event.pos) and self.nick:
                         start.create_button(screen, (34, 139, 34), 860, 430, 200, 50, 100,
                                             'Продолжить', (255, 255, 255))
+                        sock.bind((server, port))
+                        sock.listen(1)
                         show = False
                         self.b = 1
                     elif save.pressed(event.pos) and self.b == 1:
-                        file = open('data/save.txt', 'w')
-                        file.write(f'self.board = {str(self.board)}')
-                        file.close()
+                        self.save()
                         show = False
                     elif load.pressed(event.pos):
                         self.load_saves()
                         show = False
                     if reg.pressed(event.pos):
                         input_box1.register()
-
+                    if connection.pressed(event.pos):
+                        input_box2.connect()
                 elif event.type == KEYDOWN:
                     if event.key == K_ESCAPE and self.b == 1:
                         show = False
@@ -456,6 +522,8 @@ class Board:
             close.create_button(screen, (34, 139, 34), 860, 700, 200, 50, 100, 'Выйти', (255, 255, 255))
             reg.create_button(screen, (34, 139, 34), 1450, 991, 200, 50, 100,
                               'Принять Ник', (255, 255, 255))
+            connection.create_button(screen, (34, 139, 34), 265, 40, 200, 50, 100,
+                              'Connect', (255, 255, 255))
             save.create_button(screen, (34, 139, 34), 860, 520, 200, 50, 100, 'Сохранить', (255, 255, 255))
             load.create_button(screen, (34, 139, 34), 860, 610, 200, 50, 100, 'Загрузить', (255, 255, 255))
             if self.b == 0:
@@ -466,6 +534,64 @@ class Board:
             pygame.display.update()
             clock.tick(60)
         screen.fill('black')
+
+
+class Build(pygame.sprite.Sprite):
+    def __init__(self, *group):
+        super().__init__(*group)
+        self.left = 60
+        self.top = 30
+        self.cell_size = 30
+
+    def update(self, x, y):
+        cell_x = (x - self.left) // self.cell_size
+        cell_y = (y - self.top) // self.cell_size
+        self.rect.x = self.left + cell_x * 30
+        self.rect.y = self.top + cell_y * 30
+
+
+class Forester(Build):
+    image = load_image('house_of_forester.png')
+
+    def __init__(self, *group):
+        super().__init__(*group)
+        self.image = Forester.image
+        self.rect = self.image.get_rect()
+        self.rect.x = -30
+        self.rect.y = -30
+
+
+class IronMine(Build):
+    image = load_image('rudnik-iron.png')
+
+    def __init__(self, *group):
+        super().__init__(*group)
+        self.image = IronMine.image
+        self.rect = self.image.get_rect()
+        self.rect.x = -30
+        self.rect.y = -30
+
+
+class WolframMine(Build):
+    image = load_image('rudnik-wolfram.png')
+
+    def __init__(self, *group):
+        super().__init__(*group)
+        self.image = WolframMine.image
+        self.rect = self.image.get_rect()
+        self.rect.x = -30
+        self.rect.y = -30
+
+
+class OilPump(Build):
+    image = load_image('oil_pumpers.png')
+
+    def __init__(self, *group):
+        super().__init__(*group)
+        self.image = OilPump.image
+        self.rect = self.image.get_rect()
+        self.rect.x = -30
+        self.rect.y = -30
 
 
 class Unit(pygame.sprite.Sprite):
@@ -510,7 +636,35 @@ class Artillery(Unit):
         self.rect.y = -30
 
 
+class Tank(Unit):
+    image = load_image('tank.png')
+
+    def __init__(self, *group):
+        # НЕОБХОДИМО вызвать конструктор родительского класса Sprite.
+        # Это очень важно!!!
+        super().__init__(*group)
+        self.image = Tank.image
+        self.rect = self.image.get_rect()
+        self.rect.x = -30
+        self.rect.y = -30
+
+
+class MotoBrigada(Unit):
+    image = load_image('moto_brigada.png')
+
+    def __init__(self, *group):
+        # НЕОБХОДИМО вызвать конструктор родительского класса Sprite.
+        # Это очень важно!!!
+        super().__init__(*group)
+        self.image = MotoBrigada.image
+        self.rect = self.image.get_rect()
+        self.rect.x = -30
+        self.rect.y = -30
+
+
 if __name__ == '__main__':
+    red = Red()
+    blue = Blue()
     fps = 60  # количество кадров в секунду
     clock = pygame.time.Clock()
     pygame.init()
@@ -522,23 +676,100 @@ if __name__ == '__main__':
     running = True
     soldat = Soldier(units_sprites)
     artil = Artillery(units_sprites)
+    tank = Tank(units_sprites)
+    moto = MotoBrigada(units_sprites)
     board.place_of_war()
+    brd = board.get_board()
+    d = 0
+    font = pygame.font.Font(None, 30)
+    if step_of_user % 2 == 0:
+        resource = blue.res()
+    else:
+        resource = red.res()
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
+                board.save()
                 running = False
             if event.type == pygame.MOUSEBUTTONDOWN:
                 x, y = event.pos
+                board.get_click(event.pos)
                 if event.button == 1:
-                    board.get_click(event.pos)
-                    if x >= 60 and y >= 30:
-                        artil.update(x, y)
+                    if 30 <= x <= 60 and 30 <= y <= 60:
+                        d = 10
+                    if 90 <= y <= 120 and 30 <= x <= 60:
+                        d = 20
+                    if 150 <= y <= 180 and 30 <= x <= 60:
+                        d = 30
+                    if 210 <= y <= 240 and 30 <= x <= 60:
+                        d = 40
+                    if 270 <= y <= 300 and 30 <= x <= 60:
+                        d = 100
+                    if 330 <= y <= 360 and 30 <= x <= 60:
+                        d = 200
+                    if 390 <= y <= 420 and 30 <= x <= 60:
+                        d = 300
+                    if 450 <= y <= 480 and 30 <= x <= 60:
+                        d = 400
+                if event.button == 3:
+                    cell_x = (x - 60) // 30
+                    cell_y = (y - 30) // 30
+                    if brd[cell_y][cell_x] in [1, 2, 3, 4, 5, 6]:
+                        if d == 10 and resource[4] >= 2 and resource[3] >= 2:
+                            artil.update(x, y)
+                            resource[4] -= 1
+                            resource[3] -= 2
+                        elif d == 20 and resource[4] >= 2 and resource[3] >= 1:
+                            soldat.update(x, y)
+                            resource[4] -= 1
+                            resource[3] -= 1
+                        elif d == 30 and resource[3] >= 3 and resource[5] >= 1 and resource[6] >= 1:
+                            tank.update(x, y)
+                            resource[3] -= 3
+                            resource[5] -= 1
+                            resource[6] -= 1
+                        elif d == 40 and resource[3] >= 2 and resource[4] >= 1 and resource[5] >= 1:
+                            moto.update(x, y)
+                            resource[4] -= 1
+                            resource[3] -= 2
+                            resource[5] -= 1
+                        elif d == 100 and brd[cell_y][cell_x] == 4 and resource[4] >= 1:
+                            brd[cell_y][cell_x] = 100
+                            resource[4] += 2
+                        elif d == 200 and brd[cell_y][cell_x] == 3 and resource[4] >= 2:
+                            brd[cell_y][cell_x] = 200
+                            resource[3] += 1
+                            resource[4] -= 1
+                        elif d == 400 and brd[cell_y][cell_x] == 6 and resource[3] >= 2 and resource[5] >= 1:
+                            brd[cell_y][cell_x] = 400
+                            resource[6] += 1
+                            resource[4] -= 2
+                            resource[5] -= 1
+                        elif d == 300 and brd[cell_y][cell_x] == 5 and resource[4] >= 3 and resource[3] >= 2:
+                            brd[cell_y][cell_x] = 300
+                            resource[5] += 1
+                            resource[4] -= 2
+                            resource[3] -= 2
+                        board.update_board(brd)
             elif event.type == KEYDOWN:
                 if event.key == K_ESCAPE:
+                    board.save()
                     board.menu()
-        board.render()
+        screen.fill((42, 92, 3))
+        pygame.draw.rect(screen, (10, 96, 150), (60, 30, 1860, 1050))
+        text_f = font.render(str(resource[4]), True, (255, 0, 0))
+        text_i = font.render(str(resource[3]), True, (255, 0, 0))
+        text_o = font.render(str(resource[5]), True, (255, 0, 0))
+        text_w = font.render(str(resource[6]), True, (255, 0, 0))
+        screen.blit(text_f, (60, 270))
+        screen.blit(text_i, (60, 330))
+        screen.blit(text_o, (60, 390))
+        screen.blit(text_w, (60, 450))
         all_sprites.draw(screen)
+        board.render()
+        builds_sprites.draw(screen)
         units_sprites.draw(screen)
         pygame.display.flip()
         clock.tick(60)
+        board.save()
     pygame.quit()

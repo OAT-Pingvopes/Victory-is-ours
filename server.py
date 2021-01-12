@@ -1,14 +1,13 @@
 import socket
 
 sock = socket.socket()
-host = ''
+server = ''
 port = 5050
-sock.bind((host, port))
+sock.bind((server, port))
 sock.listen(1)
 conn, addr = sock.accept()
 
 print('connected:', addr)
+file = open('data/save.txt', mode='r').readlines()
 
-while True:
-    data = conn.recv(10240)
-    conn.send()
+conn.send(file[0].encode('utf-8'))
