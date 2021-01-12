@@ -48,7 +48,7 @@ def load_image(name, colorkey=None):
 
 class Red:
     def __init__(self):
-        self.resource = {3: 0, 4: 1, 5: 0, 6: 0}
+        self.resource = {3: 100, 4: 100, 5: 100, 6: 100}
 
     def res(self):
         return self.resource
@@ -56,7 +56,7 @@ class Red:
 
 class Blue:
     def __init__(self):
-        self.resource = {3: 0, 4: 1, 5: 0, 6: 0}
+        self.resource = {3: 100, 4: 100, 5: 100, 6: 100}
 
     def res(self):
         return self.resource
@@ -170,6 +170,7 @@ class Button:
             return False
 
 
+step = Button()
 class Board:
     # создание поля
     def __init__(self, width, height):
@@ -358,6 +359,7 @@ class Board:
     def load_saves(self):
         load_file = open('data/save.txt', mode='r').readlines()
         exec(load_file[0])
+        exec(load_file[1])
         self.place_of_war()
 
     def place_of_war(self):
@@ -411,7 +413,6 @@ class Board:
         self.cell_size = cell_size
 
     def render(self):
-        step = Button()
         Artillery(units_sprites).update(30, self.top)
         Soldier(units_sprites).update(30, self.cell_size * 2 + self.top)
         Tank(units_sprites).update(30, self.cell_size * 4 + self.top)
@@ -470,7 +471,8 @@ class Board:
 
     def save(self):
         file = open('data/save.txt', 'w')
-        file.write(f'self.board = {str(self.board)}')
+        file.write(f'self.board = {str(self.board)}\n')
+        file.write(f'step_of_user = {str(step_of_user)}')
         file.close()
 
     def menu(self):
@@ -602,16 +604,18 @@ class Unit(pygame.sprite.Sprite):
         self.left = 60
         self.top = 30
         self.cell_size = 30
+        self.board_un = [[0] * 62 for i in range(35)]
 
     def update(self, x, y):
         cell_x = (x - self.left) // self.cell_size
         cell_y = (y - self.top) // self.cell_size
+#            self.board_un[cell_y][cell_x] = 30
         self.rect.x = self.left + cell_x * 30
         self.rect.y = self.top + cell_y * 30
 
 
 class Soldier(Unit):
-    image = load_image('Sprite Of Brigada.png')
+    image = load_image('Sprite Of Brigada_blue.png')
 
     def __init__(self, *group):
         # НЕОБХОДИМО вызвать конструктор родительского класса Sprite.
@@ -622,9 +626,21 @@ class Soldier(Unit):
         self.rect.x = -30
         self.rect.y = -30
 
+    def update_icon(self):
+        if step_of_user % 2 == 0:
+            image = load_image('Sprite Of Brigada_blue.png')
+        else:
+            image = load_image('Sprite Of Brigada_red.png')
+        self.image = image
+
+    def update(self, x, y):
+        cell_x = (x - self.left) // self.cell_size
+        cell_y = (y - self.top) // self.cell_size
+        self.board_un[cell_y][cell_x] = 20
+
 
 class Artillery(Unit):
-    image = load_image('Artillery.png')
+    image = load_image('Artillery_blue.png')
 
     def __init__(self, *group):
         # НЕОБХОДИМО вызвать конструктор родительского класса Sprite.
@@ -635,9 +651,21 @@ class Artillery(Unit):
         self.rect.x = -30
         self.rect.y = -30
 
+    def update_icon(self):
+        if step_of_user % 2 == 0:
+            image = load_image('Artillery_blue.png')
+        else:
+            image = load_image('Artillery_red.png')
+        self.image = image
+
+    def update(self, x, y):
+        cell_x = (x - self.left) // self.cell_size
+        cell_y = (y - self.top) // self.cell_size
+        self.board_un[cell_y][cell_x] = 10
+
 
 class Tank(Unit):
-    image = load_image('tank.png')
+    image = load_image('tank_blue.png')
 
     def __init__(self, *group):
         # НЕОБХОДИМО вызвать конструктор родительского класса Sprite.
@@ -648,9 +676,21 @@ class Tank(Unit):
         self.rect.x = -30
         self.rect.y = -30
 
+    def update_icon(self):
+        if step_of_user % 2 == 0:
+            image = load_image('tank_blue.png')
+        else:
+            image = load_image('tank_red.png')
+        self.image = image
+
+    def update(self, x, y):
+        cell_x = (x - self.left) // self.cell_size
+        cell_y = (y - self.top) // self.cell_size
+        self.board_un[cell_y][cell_x] = 40
+
 
 class MotoBrigada(Unit):
-    image = load_image('moto_brigada.png')
+    image = load_image('moto_brigada_blue.png')
 
     def __init__(self, *group):
         # НЕОБХОДИМО вызвать конструктор родительского класса Sprite.
@@ -661,6 +701,19 @@ class MotoBrigada(Unit):
         self.rect.x = -30
         self.rect.y = -30
 
+    def update_icon(self):
+        if step_of_user % 2 == 0:
+            image = load_image('moto_brigada_blue.png')
+        else:
+            image = load_image('moto_brigada_red.png')
+        self.image = image
+
+    def update(self, x, y):
+        cell_x = (x - self.left) // self.cell_size
+        cell_y = (y - self.top) // self.cell_size
+        self.board_un[cell_y][cell_x] = 30
+        # for i in self.board_un:
+        #     print(i)
 
 if __name__ == '__main__':
     red = Red()
@@ -678,15 +731,18 @@ if __name__ == '__main__':
     artil = Artillery(units_sprites)
     tank = Tank(units_sprites)
     moto = MotoBrigada(units_sprites)
-    board.place_of_war()
+    board.place_of_war()    #    self.rect.x = self.left + cell_x * 30
+    #    self.rect.y = self.top + cell_y * 30
+
     brd = board.get_board()
     d = 0
+    step.create_button(screen, (34, 139, 34), 1700, 1010, 200, 50, 100, 'Закончить ход', (255, 255, 255))
     font = pygame.font.Font(None, 30)
-    if step_of_user % 2 == 0:
-        resource = blue.res()
-    else:
-        resource = red.res()
     while running:
+        if step_of_user % 2 == 0:
+            resource = blue.res()
+        else:
+            resource = red.res()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 board.save()
@@ -751,6 +807,12 @@ if __name__ == '__main__':
                             resource[4] -= 2
                             resource[3] -= 2
                         board.update_board(brd)
+                if step.pressed(event.pos):
+                    step_of_user += 1
+                    artil.update_icon()
+                    soldat.update_icon()
+                    tank.update_icon()
+                    moto.update_icon()
             elif event.type == KEYDOWN:
                 if event.key == K_ESCAPE:
                     board.save()
