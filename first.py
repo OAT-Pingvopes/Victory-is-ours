@@ -20,6 +20,7 @@ c = 0
 # 200 - рудник железа
 # 300 - нефтекачалка
 # 400 - рудник вольфрама
+step_of_person = 0
 all_sprites = pygame.sprite.Group()
 units_sprites = pygame.sprite.Group()
 builds_sprites = pygame.sprite.Group()
@@ -133,6 +134,9 @@ class Button:
                 return False
         else:
             return False
+
+
+step = Button()
 
 
 class Board:
@@ -376,7 +380,6 @@ class Board:
         self.cell_size = cell_size
 
     def render(self):
-        step = Button()
         Artillery(units_sprites).update(30, self.top)
         Soldier(units_sprites).update(30, self.cell_size * 2 + self.top)
         Tank(units_sprites).update(30, self.cell_size * 4 + self.top)
@@ -636,6 +639,12 @@ if __name__ == '__main__':
     d = 0
     font = pygame.font.Font(None, 30)
     resource = {3: 0, 4: 1, 5: 0, 6: 0}
+    step.create_button(screen, (34, 139, 34), 1700, 1010, 200, 50, 100, 'Закончить ход', (255, 255, 255))
+    text_f = font.render('1', True, (255, 0, 0))
+    text_i = font.render('0', True, (255, 0, 0))
+    text_o = font.render('0', True, (255, 0, 0))
+    text_w = font.render('0', True, (255, 0, 0))
+    remove_resource = {3: 0, 4: 0, 5: 0, 6: 0}
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -664,51 +673,62 @@ if __name__ == '__main__':
                     cell_x = (x - 60) // 30
                     cell_y = (y - 30) // 30
                     if brd[cell_y][cell_x] in [1, 2, 3, 4, 5, 6]:
-                        if d == 10 and resource[4] >= 2 and resource[3] >= 2:
+                        if d == 10 and resource[4] >= 1 and resource[3] >= 2 and resource[4] > remove_resource[4]:
                             artil.update(x, y)
-                            resource[4] -= 1
-                            resource[3] -= 2
-                        elif d == 20 and resource[4] >= 2 and resource[3] >= 1:
+                            remove_resource[4] += 1
+                            remove_resource[3] += 2
+                        elif d == 20 and resource[4] >= 1 and resource[3] >= 1 and resource[4] > remove_resource[4]:
                             soldat.update(x, y)
-                            resource[4] -= 1
-                            resource[3] -= 1
+                            remove_resource[4] += 1
+                            remove_resource[3] += 1
                         elif d == 30 and resource[3] >= 3 and resource[5] >= 1 and resource[6] >= 1:
                             tank.update(x, y)
-                            resource[3] -= 3
-                            resource[5] -= 1
-                            resource[6] -= 1
-                        elif d == 40 and resource[3] >= 2 and resource[4] >= 1 and resource[5] >= 1:
+                            remove_resource[3] += 3
+                            remove_resource[5] += 1
+                            remove_resource[6] += 1
+                        elif d == 40 and resource[3] >= 2 and resource[6] >= 1 and resource[5] >= 1:
                             moto.update(x, y)
-                            resource[4] -= 1
-                            resource[3] -= 2
-                            resource[5] -= 1
-                        elif d == 100 and brd[cell_y][cell_x] == 4 and resource[4] >= 1:
+                            remove_resource[6] += 1
+                            remove_resource[3] += 2
+                            remove_resource[5] += 1
+                        elif d == 100 and brd[cell_y][cell_x] == 4 and resource[4] >= 0:
                             brd[cell_y][cell_x] = 100
-                            resource[4] += 2
-                        elif d == 200 and brd[cell_y][cell_x] == 3 and resource[4] >= 2:
+                            remove_resource[4] -= 2
+                        elif d == 200 and brd[cell_y][cell_x] == 3 and resource[4] >= 1\
+                                and resource[4] > remove_resource[4]:
                             brd[cell_y][cell_x] = 200
-                            resource[3] += 1
-                            resource[4] -= 1
+                            remove_resource[3] -= 1
+                            remove_resource[4] += 1
                         elif d == 400 and brd[cell_y][cell_x] == 6 and resource[3] >= 2 and resource[5] >= 1:
                             brd[cell_y][cell_x] = 400
-                            resource[6] += 1
-                            resource[4] -= 2
-                            resource[5] -= 1
-                        elif d == 300 and brd[cell_y][cell_x] == 5 and resource[4] >= 3 and resource[3] >= 2:
+                            remove_resource[6] -= 1
+                            remove_resource[3] += 2
+                            remove_resource[5] += 1
+                        elif d == 300 and brd[cell_y][cell_x] == 5 and resource[4] >= 2 and resource[3] >= 2\
+                                and resource[4] > remove_resource[4] + 1:
                             brd[cell_y][cell_x] = 300
-                            resource[5] += 1
-                            resource[4] -= 2
-                            resource[3] -= 2
+                            remove_resource[5] -= 1
+                            remove_resource[4] += 2
+                            remove_resource[3] += 2
                         board.update_board(brd)
+                if step.pressed(event.pos):
+                    for x in resource.keys():
+                        resource[x] -= remove_resource[x]
+                    if step_of_person == 0:
+                        step_of_person = 1
+                    else:
+                        step_of_person = 0
+                    remove_resource = {3: 0, 4: 0, 5: 0, 6: 0}
+                    text_f = font.render(str(resource[4]), True, (255, 0, 0))
+                    text_i = font.render(str(resource[3]), True, (255, 0, 0))
+                    text_o = font.render(str(resource[5]), True, (255, 0, 0))
+                    text_w = font.render(str(resource[6]), True, (255, 0, 0))
+                    print(step_of_person)
             elif event.type == KEYDOWN:
                 if event.key == K_ESCAPE:
                     board.menu()
         screen.fill((42, 92, 3))
         pygame.draw.rect(screen, (10, 96, 150), (60, 30, 1860, 1050))
-        text_f = font.render(f"{resource[4]}", True, (255, 0, 0))
-        text_i = font.render(f"{resource[3]}", True, (255, 0, 0))
-        text_o = font.render(f"{resource[5]}", True, (255, 0, 0))
-        text_w = font.render(f"{resource[6]}", True, (255, 0, 0))
         screen.blit(text_f, (60, 270))
         screen.blit(text_i, (60, 330))
         screen.blit(text_o, (60, 390))
