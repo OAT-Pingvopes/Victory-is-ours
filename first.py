@@ -142,12 +142,12 @@ class Board:
         self.width = width
         self.height = height
         self.board = []
-        self.resources1_1 = {3: 9, 4: 30, 5: 3, 6: 4}
-        self.resources1_2 = {3: 9, 4: 30, 5: 3, 6: 4}
-        self.resources2_1 = {3: 9, 4: 30, 5: 3, 6: 4}
-        self.resources2_2 = {3: 9, 4: 30, 5: 3, 6: 4}
-        self.resources3_1 = {3: 9, 4: 30, 5: 3, 6: 4}
-        self.resources3_2 = {3: 9, 4: 30, 5: 3, 6: 4}
+        self.resources1_1 = {3: 12, 4: 30, 5: 3, 6: 4}
+        self.resources1_2 = {3: 12, 4: 30, 5: 3, 6: 4}
+        self.resources2_1 = {3: 12, 4: 30, 5: 3, 6: 4}
+        self.resources2_2 = {3: 12, 4: 30, 5: 3, 6: 4}
+        self.resources3_1 = {3: 12, 4: 30, 5: 3, 6: 4}
+        self.resources3_2 = {3: 12, 4: 30, 5: 3, 6: 4}
         for i in range(height):
             if i < 5 or i > 29:
                 self.board.append([0] * width)
@@ -381,6 +381,7 @@ class Board:
         Soldier(units_sprites).update(30, self.cell_size * 2 + self.top)
         Tank(units_sprites).update(30, self.cell_size * 4 + self.top)
         MotoBrigada(units_sprites).update(30, self.cell_size * 6 + self.top)
+
         Forester(builds_sprites).update(30, self.cell_size * 8 + self.top)
         IronMine(builds_sprites).update(30, self.cell_size * 10 + self.top)
         OilPump(builds_sprites).update(30, self.cell_size * 12 + self.top)
@@ -632,8 +633,8 @@ if __name__ == '__main__':
     moto = MotoBrigada(units_sprites)
     board.place_of_war()
     brd = board.get_board()
-    units = {}
     d = 0
+    font = pygame.font.Font(None, 30)
     resource = {3: 0, 4: 1, 5: 0, 6: 0}
     while running:
         for event in pygame.event.get():
@@ -683,7 +684,7 @@ if __name__ == '__main__':
                             resource[5] -= 1
                         elif d == 100 and brd[cell_y][cell_x] == 4 and resource[4] >= 1:
                             brd[cell_y][cell_x] = 100
-                            resource[4] += 1
+                            resource[4] += 2
                         elif d == 200 and brd[cell_y][cell_x] == 3 and resource[4] >= 2:
                             brd[cell_y][cell_x] = 200
                             resource[3] += 1
@@ -704,6 +705,14 @@ if __name__ == '__main__':
                     board.menu()
         screen.fill((42, 92, 3))
         pygame.draw.rect(screen, (10, 96, 150), (60, 30, 1860, 1050))
+        text_f = font.render(f"{resource[4]}", True, (255, 0, 0))
+        text_i = font.render(f"{resource[3]}", True, (255, 0, 0))
+        text_o = font.render(f"{resource[5]}", True, (255, 0, 0))
+        text_w = font.render(f"{resource[6]}", True, (255, 0, 0))
+        screen.blit(text_f, (60, 270))
+        screen.blit(text_i, (60, 330))
+        screen.blit(text_o, (60, 390))
+        screen.blit(text_w, (60, 450))
         all_sprites.draw(screen)
         board.render()
         builds_sprites.draw(screen)
