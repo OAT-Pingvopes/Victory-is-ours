@@ -21,15 +21,25 @@ c = 0
 # 300 - нефтекачалка
 # 400 - рудник вольфрама
 step_of_person = 0
+mus = 0
 all_sprites = pygame.sprite.Group()
 units_sprites = pygame.sprite.Group()
 builds_sprites = pygame.sprite.Group()
 COLOR_INACTIVE = pygame.Color('lightskyblue3')
 COLOR_ACTIVE = pygame.Color('dodgerblue2')
 FONT = pygame.font.Font(None, 32)
-pygame.mixer.music.load('data/Егор Летов - Моя оборона.mp3')
-pygame.mixer.music.set_volume(0.1)
-pygame.mixer.music.play(-1)
+if mus == 0:
+    pygame.mixer.music.load('data/Егор Летов - Моя оборона.mp3')
+    pygame.mixer.music.set_volume(0)
+    pygame.mixer.music.play()
+    if not pygame.mixer.music.get_busy():
+        mus = 1
+elif mus == 1:
+    pygame.mixer.music.load('data/Soviet.mp3')
+    pygame.mixer.music.set_volume(0)
+    pygame.mixer.music.play()
+    if not pygame.mixer.music.get_busy():
+        mus = 0
 
 
 def load_image(name, colorkey=None):
@@ -560,10 +570,12 @@ class Unit(pygame.sprite.Sprite):
         self.left = 60
         self.top = 30
         self.cell_size = 30
+        self.board_un = [[0] * 62 for i in range(35)]
 
-    def update(self, x, y):
+    def update(self, x, y, n=0):
         cell_x = (x - self.left) // self.cell_size
         cell_y = (y - self.top) // self.cell_size
+        self.board_un[cell_y][cell_x] = n
         self.rect.x = self.left + cell_x * 30
         self.rect.y = self.top + cell_y * 30
 
@@ -580,6 +592,18 @@ class Soldier(Unit):
         self.rect.x = -30
         self.rect.y = -30
 
+    def render(self):
+        for y in range(35):
+            for x in range(62):
+                position = (x * self.cell_size + self.left, y * self.cell_size + self.top)
+                size = self.cell_size, self.cell_size
+                if self.board_un[y][x] == 20:
+                    field_image = load_image("Sprite Of Brigada.png")
+                    field = pygame.sprite.Sprite(units_sprites)
+                    field.image = field_image
+                    field.rect = field.image.get_rect()
+                    field.rect.x, field.rect.y = position[0], position[1]
+
 
 class Artillery(Unit):
     image = load_image('Artillery.png')
@@ -592,6 +616,18 @@ class Artillery(Unit):
         self.rect = self.image.get_rect()
         self.rect.x = -30
         self.rect.y = -30
+
+    def render(self):
+        for y in range(35):
+            for x in range(62):
+                position = (x * self.cell_size + self.left, y * self.cell_size + self.top)
+                size = self.cell_size, self.cell_size
+                if self.board_un[y][x] == 10:
+                    field_image = load_image("Artillery.png")
+                    field = pygame.sprite.Sprite(units_sprites)
+                    field.image = field_image
+                    field.rect = field.image.get_rect()
+                    field.rect.x, field.rect.y = position[0], position[1]
 
 
 class Tank(Unit):
@@ -606,6 +642,18 @@ class Tank(Unit):
         self.rect.x = -30
         self.rect.y = -30
 
+    def render(self):
+        for y in range(35):
+            for x in range(62):
+                position = (x * self.cell_size + self.left, y * self.cell_size + self.top)
+                size = self.cell_size, self.cell_size
+                if self.board_un[y][x] == 30:
+                    field_image = load_image("tank.png")
+                    field = pygame.sprite.Sprite(units_sprites)
+                    field.image = field_image
+                    field.rect = field.image.get_rect()
+                    field.rect.x, field.rect.y = position[0], position[1]
+
 
 class MotoBrigada(Unit):
     image = load_image('moto_brigada.png')
@@ -618,6 +666,18 @@ class MotoBrigada(Unit):
         self.rect = self.image.get_rect()
         self.rect.x = -30
         self.rect.y = -30
+
+    def render(self):
+        for y in range(35):
+            for x in range(62):
+                position = (x * self.cell_size + self.left, y * self.cell_size + self.top)
+                size = self.cell_size, self.cell_size
+                if self.board_un[y][x] == 40:
+                    field_image = load_image("moto_brigada.png")
+                    field = pygame.sprite.Sprite(units_sprites)
+                    field.image = field_image
+                    field.rect = field.image.get_rect()
+                    field.rect.x, field.rect.y = position[0], position[1]
 
 
 if __name__ == '__main__':
@@ -636,6 +696,7 @@ if __name__ == '__main__':
     moto = MotoBrigada(units_sprites)
     board.place_of_war()
     brd = board.get_board()
+    unit = Unit()
     d = 0
     font = pygame.font.Font(None, 30)
     resource = {3: 0, 4: 1, 5: 0, 6: 0}
@@ -673,39 +734,51 @@ if __name__ == '__main__':
                     cell_x = (x - 60) // 30
                     cell_y = (y - 30) // 30
                     if brd[cell_y][cell_x] in [1, 2, 3, 4, 5, 6]:
-                        if d == 10 and resource[4] >= 1 and resource[3] >= 2 and resource[4] > remove_resource[4]:
-                            artil.update(x, y)
+                        if d == 10 and resource[4] >= 1 and resource[3] >= 2 and resource[4] > remove_resource[4]\
+                                and resource[3] > remove_resource[3]:
+                            artil.update(x, y, 10)
+                            artil.render()
                             remove_resource[4] += 1
                             remove_resource[3] += 2
-                        elif d == 20 and resource[4] >= 1 and resource[3] >= 1 and resource[4] > remove_resource[4]:
-                            soldat.update(x, y)
+                        elif d == 20 and resource[4] >= 1 and resource[3] >= 1 and resource[4] > remove_resource[4] \
+                                and resource[3] > remove_resource[3]:
+                            soldat.update(x, y, 20)
+                            soldat.render()
                             remove_resource[4] += 1
                             remove_resource[3] += 1
-                        elif d == 30 and resource[3] >= 3 and resource[5] >= 1 and resource[6] >= 1:
-                            tank.update(x, y)
+                        elif d == 30 and resource[3] >= 3 and resource[5] >= 1 and resource[6] >= 1 \
+                                and resource[3] > remove_resource[3] and resource[5] > remove_resource[5] \
+                                and resource[6] > remove_resource[6]:
+                            tank.update(x, y, 30)
+                            tank.render()
                             remove_resource[3] += 3
                             remove_resource[5] += 1
                             remove_resource[6] += 1
-                        elif d == 40 and resource[3] >= 2 and resource[6] >= 1 and resource[5] >= 1:
-                            moto.update(x, y)
-                            remove_resource[6] += 1
+                        elif d == 40 and resource[3] >= 2 and resource[4] > 1 and resource[5] >= 1\
+                                and resource[3] > remove_resource[3] and resource[5] > remove_resource[5] \
+                                and resource[4] > remove_resource[4]:
+                            moto.update(x, y, 40)
+                            moto.render()
+                            remove_resource[4] += 1
                             remove_resource[3] += 2
                             remove_resource[5] += 1
-                        elif d == 100 and brd[cell_y][cell_x] == 4 and resource[4] >= 0:
+                        elif d == 100 and brd[cell_y][cell_x] == 4 and resource[4] > 0\
+                                and resource[4] > remove_resource[4]:
                             brd[cell_y][cell_x] = 100
                             remove_resource[4] -= 2
-                        elif d == 200 and brd[cell_y][cell_x] == 3 and resource[4] >= 1\
-                                and resource[4] > remove_resource[4]:
+                        elif d == 200 and brd[cell_y][cell_x] == 3 and resource[4] > 1\
+                                and resource[4] > remove_resource[4] + 1 and resource[3] >= remove_resource[3]:
                             brd[cell_y][cell_x] = 200
                             remove_resource[3] -= 1
                             remove_resource[4] += 1
-                        elif d == 400 and brd[cell_y][cell_x] == 6 and resource[3] >= 2 and resource[5] >= 1:
+                        elif d == 400 and brd[cell_y][cell_x] == 6 and resource[3] >= 2 and resource[5] >= 1\
+                                and resource[3] >= remove_resource[3] and resource[5] >= remove_resource[5]:
                             brd[cell_y][cell_x] = 400
                             remove_resource[6] -= 1
                             remove_resource[3] += 2
                             remove_resource[5] += 1
                         elif d == 300 and brd[cell_y][cell_x] == 5 and resource[4] >= 2 and resource[3] >= 2\
-                                and resource[4] > remove_resource[4] + 1:
+                                and resource[4] > remove_resource[4] + 1 and resource[3] >= remove_resource[3]:
                             brd[cell_y][cell_x] = 300
                             remove_resource[5] -= 1
                             remove_resource[4] += 2
@@ -723,7 +796,6 @@ if __name__ == '__main__':
                     text_i = font.render(str(resource[3]), True, (255, 0, 0))
                     text_o = font.render(str(resource[5]), True, (255, 0, 0))
                     text_w = font.render(str(resource[6]), True, (255, 0, 0))
-                    print(step_of_person)
             elif event.type == KEYDOWN:
                 if event.key == K_ESCAPE:
                     board.menu()
