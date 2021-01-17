@@ -1,15 +1,10 @@
 import os
 import random
 import sys
-import socket
 from pygame.locals import *
 import pygame
 pygame.init()
-step_of_user = 0
 c = 0
-sock = socket.socket()
-server = ''
-port = 5050
 # 0 - вода
 # 1 - выделенная клетка
 # 2 - земля
@@ -25,15 +20,26 @@ port = 5050
 # 200 - рудник железа
 # 300 - нефтекачалка
 # 400 - рудник вольфрама
+step_of_person = 0
+mus = 0
 all_sprites = pygame.sprite.Group()
 units_sprites = pygame.sprite.Group()
 builds_sprites = pygame.sprite.Group()
 COLOR_INACTIVE = pygame.Color('lightskyblue3')
 COLOR_ACTIVE = pygame.Color('dodgerblue2')
 FONT = pygame.font.Font(None, 32)
-pygame.mixer.music.load('data/Agression.mp3')
-pygame.mixer.music.set_volume(0.1)
-pygame.mixer.music.play(-1)
+if mus == 0:
+    pygame.mixer.music.load('data/Agression.mp3')
+    pygame.mixer.music.set_volume(0)
+    pygame.mixer.music.play()
+    if not pygame.mixer.music.get_busy():
+        mus = 1
+elif mus == 1:
+    pygame.mixer.music.load('data/Soviet.mp3')
+    pygame.mixer.music.set_volume(0)
+    pygame.mixer.music.play()
+    if not pygame.mixer.music.get_busy():
+        mus = 0
 
 
 def load_image(name, colorkey=None):
@@ -46,22 +52,6 @@ def load_image(name, colorkey=None):
     return image
 
 
-class Red:
-    def __init__(self):
-        self.resource = {3: 100, 4: 100, 5: 100, 6: 100}
-
-    def res(self):
-        return self.resource
-
-
-class Blue:
-    def __init__(self):
-        self.resource = {3: 100, 4: 100, 5: 100, 6: 100}
-
-    def res(self):
-        return self.resource
-
-
 class InputBox:
     def __init__(self, x, y, w, h, text=''):
         self.rect = pygame.Rect(x, y, w, h)
@@ -69,10 +59,7 @@ class InputBox:
         self.text = text
         self.txt_surface = FONT.render(text, True, self.color)
         self.active = False
-        if x == 1700:
-            nick = open('data/cfg.txt', mode='r').readlines()[0].split()[2]
-        else:
-            nick = ''
+        nick = open('data/cfg.txt', mode='r').readlines()[0].split()[2]
         self.txt_surface = FONT.render(nick[1:-1], True, self.color)
 
     def handle_event(self, event):
@@ -102,17 +89,6 @@ class InputBox:
         nick[2] = "'" + self.text + "'"
         f = open('data/cfg.txt', mode='w')
         f.write(' '.join(nick))
-
-    def connect(self):
-        host = self.text
-        port = 5050
-        try:
-            sock.connect((host, port))
-        except:
-            self.answer()
-
-    def answer(self):
-        self.txt_surface = FONT.render('Connection down', True, self.color)
 
     def update(self):
         # Resize the box if the text is too long.
@@ -171,6 +147,8 @@ class Button:
 
 
 step = Button()
+
+
 class Board:
     # создание поля
     def __init__(self, width, height):
@@ -359,7 +337,6 @@ class Board:
     def load_saves(self):
         load_file = open('data/save.txt', mode='r').readlines()
         exec(load_file[0])
-        exec(load_file[1])
         self.place_of_war()
 
     def place_of_war(self):
@@ -371,7 +348,6 @@ class Board:
         for y in range(self.height):
             for x in range(self.width):
                 position = (x * self.cell_size + self.left, y * self.cell_size + self.top)
-                size = self.cell_size, self.cell_size
                 if self.board[y][x] == 2:
                     field_image = load_image("grass.png")
                     field = pygame.sprite.Sprite(all_sprites)
@@ -469,23 +445,15 @@ class Board:
     def update_board(self, board):
         self.board = board
 
-    def save(self):
-        file = open('data/save.txt', 'w')
-        file.write(f'self.board = {str(self.board)}\n')
-        file.write(f'step_of_user = {str(step_of_user)}')
-        file.close()
-
     def menu(self):
         background = pygame.image.load('data/start_menu.png')
-        connection = Button()
         reg = Button()
         close = Button()
         start = Button()
         save = Button()
         load = Button()
         input_box1 = InputBox(1700, 1000, 200, 32)
-        input_box2 = InputBox(50, 50, 200, 32)
-        input_boxes = [input_box1, input_box2]
+        input_boxes = [input_box1]
         show = True
         while show:
             for event in pygame.event.get():
@@ -496,20 +464,19 @@ class Board:
                     elif start.pressed(event.pos) and self.nick:
                         start.create_button(screen, (34, 139, 34), 860, 430, 200, 50, 100,
                                             'Продолжить', (255, 255, 255))
-                        sock.bind((server, port))
-                        sock.listen(1)
                         show = False
                         self.b = 1
                     elif save.pressed(event.pos) and self.b == 1:
-                        self.save()
+                        file = open('data/save.txt', 'w')
+                        file.write(f'self.board = {str(self.board)}')
+                        file.close()
                         show = False
                     elif load.pressed(event.pos):
                         self.load_saves()
                         show = False
                     if reg.pressed(event.pos):
                         input_box1.register()
-                    if connection.pressed(event.pos):
-                        input_box2.connect()
+
                 elif event.type == KEYDOWN:
                     if event.key == K_ESCAPE and self.b == 1:
                         show = False
@@ -524,8 +491,6 @@ class Board:
             close.create_button(screen, (34, 139, 34), 860, 700, 200, 50, 100, 'Выйти', (255, 255, 255))
             reg.create_button(screen, (34, 139, 34), 1450, 991, 200, 50, 100,
                               'Принять Ник', (255, 255, 255))
-            connection.create_button(screen, (34, 139, 34), 265, 40, 200, 50, 100,
-                              'Connect', (255, 255, 255))
             save.create_button(screen, (34, 139, 34), 860, 520, 200, 50, 100, 'Сохранить', (255, 255, 255))
             load.create_button(screen, (34, 139, 34), 860, 610, 200, 50, 100, 'Загрузить', (255, 255, 255))
             if self.b == 0:
@@ -606,16 +571,71 @@ class Unit(pygame.sprite.Sprite):
         self.cell_size = 30
         self.board_un = [[0] * 62 for i in range(35)]
 
-    def update(self, x, y):
+    def update(self, x, y, n=0):
         cell_x = (x - self.left) // self.cell_size
         cell_y = (y - self.top) // self.cell_size
-#            self.board_un[cell_y][cell_x] = 30
-        self.rect.x = self.left + cell_x * 30
-        self.rect.y = self.top + cell_y * 30
+        if step_of_person == 0 and self.board_un[cell_y][cell_x] == 0:
+            self.board_un[cell_y][cell_x] = int(str(n) + '0')
+        elif step_of_person == 1 and self.board_un[cell_y][cell_x] == 0:
+            self.board_un[cell_y][cell_x] = int(str(n) + '1')
+
+    def render(self):
+        for y in range(35):
+            for x in range(62):
+                position = (x * self.cell_size + self.left, y * self.cell_size + self.top)
+                number_of_unit = str(self.board_un[y][x])
+                if int(number_of_unit[0:2]) == 40 and int(number_of_unit[2]) == 0:
+                    field_image = load_image('moto_brigada_blue.png')
+                    field = pygame.sprite.Sprite(units_sprites)
+                    field.image = field_image
+                    field.rect = field.image.get_rect()
+                    field.rect.x, field.rect.y = position[0], position[1]
+                elif int(number_of_unit[0:2]) == 40 and int(number_of_unit[2]) == 1:
+                    field_image = load_image('moto_brigada_red.png')
+                    field = pygame.sprite.Sprite(units_sprites)
+                    field.image = field_image
+                    field.rect = field.image.get_rect()
+                    field.rect.x, field.rect.y = position[0], position[1]
+                if int(number_of_unit[0:2]) == 20 and int(number_of_unit[2]) == 0:
+                    field_image = load_image('Sprite Of Brigada_blue.png')
+                    field = pygame.sprite.Sprite(units_sprites)
+                    field.image = field_image
+                    field.rect = field.image.get_rect()
+                    field.rect.x, field.rect.y = position[0], position[1]
+                elif int(number_of_unit[0:2]) == 20 and int(number_of_unit[2]) == 1:
+                    field_image = load_image('Sprite Of Brigada_red.png')
+                    field = pygame.sprite.Sprite(units_sprites)
+                    field.image = field_image
+                    field.rect = field.image.get_rect()
+                    field.rect.x, field.rect.y = position[0], position[1]
+                if int(number_of_unit[0:2]) == 10 and int(number_of_unit[2]) == 0:
+                    field_image = load_image('Artillery_blue.png')
+                    field = pygame.sprite.Sprite(units_sprites)
+                    field.image = field_image
+                    field.rect = field.image.get_rect()
+                    field.rect.x, field.rect.y = position[0], position[1]
+                elif int(number_of_unit[0:2]) == 10 and int(number_of_unit[2]) == 1:
+                    field_image = load_image('Artillery_red.png')
+                    field = pygame.sprite.Sprite(units_sprites)
+                    field.image = field_image
+                    field.rect = field.image.get_rect()
+                    field.rect.x, field.rect.y = position[0], position[1]
+                if int(number_of_unit[0:2]) == 30 and int(number_of_unit[2]) == 0:
+                    field_image = load_image('tank_blue.png')
+                    field = pygame.sprite.Sprite(units_sprites)
+                    field.image = field_image
+                    field.rect = field.image.get_rect()
+                    field.rect.x, field.rect.y = position[0], position[1]
+                elif int(number_of_unit[0:2]) == 30 and int(number_of_unit[2]) == 1:
+                    field_image = load_image('tank_red.png')
+                    field = pygame.sprite.Sprite(units_sprites)
+                    field.image = field_image
+                    field.rect = field.image.get_rect()
+                    field.rect.x, field.rect.y = position[0], position[1]
 
 
 class Soldier(Unit):
-    image = load_image('Sprite Of Brigada_blue.png')
+    image = load_image('Sprite_Of_Brigada.png')
 
     def __init__(self, *group):
         # НЕОБХОДИМО вызвать конструктор родительского класса Sprite.
@@ -623,24 +643,12 @@ class Soldier(Unit):
         super().__init__(*group)
         self.image = Soldier.image
         self.rect = self.image.get_rect()
-        self.rect.x = -30
-        self.rect.y = -30
-
-    def update_icon(self):
-        if step_of_user % 2 == 0:
-            image = load_image('Sprite Of Brigada_blue.png')
-        else:
-            image = load_image('Sprite Of Brigada_red.png')
-        self.image = image
-
-    def update(self, x, y):
-        cell_x = (x - self.left) // self.cell_size
-        cell_y = (y - self.top) // self.cell_size
-        self.board_un[cell_y][cell_x] = 20
+        self.rect.x = 30
+        self.rect.y = 90
 
 
 class Artillery(Unit):
-    image = load_image('Artillery_blue.png')
+    image = load_image('Artillery.png')
 
     def __init__(self, *group):
         # НЕОБХОДИМО вызвать конструктор родительского класса Sprite.
@@ -648,24 +656,12 @@ class Artillery(Unit):
         super().__init__(*group)
         self.image = Artillery.image
         self.rect = self.image.get_rect()
-        self.rect.x = -30
-        self.rect.y = -30
-
-    def update_icon(self):
-        if step_of_user % 2 == 0:
-            image = load_image('Artillery_blue.png')
-        else:
-            image = load_image('Artillery_red.png')
-        self.image = image
-
-    def update(self, x, y):
-        cell_x = (x - self.left) // self.cell_size
-        cell_y = (y - self.top) // self.cell_size
-        self.board_un[cell_y][cell_x] = 10
+        self.rect.x = 30
+        self.rect.y = 30
 
 
 class Tank(Unit):
-    image = load_image('tank_blue.png')
+    image = load_image('tank.png')
 
     def __init__(self, *group):
         # НЕОБХОДИМО вызвать конструктор родительского класса Sprite.
@@ -673,24 +669,12 @@ class Tank(Unit):
         super().__init__(*group)
         self.image = Tank.image
         self.rect = self.image.get_rect()
-        self.rect.x = -30
-        self.rect.y = -30
-
-    def update_icon(self):
-        if step_of_user % 2 == 0:
-            image = load_image('tank_blue.png')
-        else:
-            image = load_image('tank_red.png')
-        self.image = image
-
-    def update(self, x, y):
-        cell_x = (x - self.left) // self.cell_size
-        cell_y = (y - self.top) // self.cell_size
-        self.board_un[cell_y][cell_x] = 40
+        self.rect.x = 30
+        self.rect.y = 150
 
 
 class MotoBrigada(Unit):
-    image = load_image('moto_brigada_blue.png')
+    image = load_image('moto_brigada.png')
 
     def __init__(self, *group):
         # НЕОБХОДИМО вызвать конструктор родительского класса Sprite.
@@ -698,26 +682,11 @@ class MotoBrigada(Unit):
         super().__init__(*group)
         self.image = MotoBrigada.image
         self.rect = self.image.get_rect()
-        self.rect.x = -30
-        self.rect.y = -30
+        self.rect.x = 30
+        self.rect.y = 210
 
-    def update_icon(self):
-        if step_of_user % 2 == 0:
-            image = load_image('moto_brigada_blue.png')
-        else:
-            image = load_image('moto_brigada_red.png')
-        self.image = image
-
-    def update(self, x, y):
-        cell_x = (x - self.left) // self.cell_size
-        cell_y = (y - self.top) // self.cell_size
-        self.board_un[cell_y][cell_x] = 30
-        # for i in self.board_un:
-        #     print(i)
 
 if __name__ == '__main__':
-    red = Red()
-    blue = Blue()
     fps = 60  # количество кадров в секунду
     clock = pygame.time.Clock()
     pygame.init()
@@ -731,21 +700,21 @@ if __name__ == '__main__':
     artil = Artillery(units_sprites)
     tank = Tank(units_sprites)
     moto = MotoBrigada(units_sprites)
-    board.place_of_war()    #    self.rect.x = self.left + cell_x * 30
-    #    self.rect.y = self.top + cell_y * 30
-
+    board.place_of_war()
     brd = board.get_board()
+    unit = Unit()
     d = 0
-    step.create_button(screen, (34, 139, 34), 1700, 1010, 200, 50, 100, 'Закончить ход', (255, 255, 255))
     font = pygame.font.Font(None, 30)
+    resource = {3: 100, 4: 100, 5: 100, 6: 100}
+    step.create_button(screen, (34, 139, 34), 1700, 1010, 200, 50, 100, 'Закончить ход', (255, 255, 255))
+    text_f = font.render(str(resource[4]), True, (255, 0, 0))
+    text_i = font.render(str(resource[3]), True, (255, 0, 0))
+    text_o = font.render(str(resource[5]), True, (255, 0, 0))
+    text_w = font.render(str(resource[6]), True, (255, 0, 0))
+    remove_resource = {3: 0, 4: 0, 5: 0, 6: 0}
     while running:
-        if step_of_user % 2 == 0:
-            resource = blue.res()
-        else:
-            resource = red.res()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                board.save()
                 running = False
             if event.type == pygame.MOUSEBUTTONDOWN:
                 x, y = event.pos
@@ -771,58 +740,70 @@ if __name__ == '__main__':
                     cell_x = (x - 60) // 30
                     cell_y = (y - 30) // 30
                     if brd[cell_y][cell_x] in [1, 2, 3, 4, 5, 6]:
-                        if d == 10 and resource[4] >= 2 and resource[3] >= 2:
-                            artil.update(x, y)
-                            resource[4] -= 1
-                            resource[3] -= 2
-                        elif d == 20 and resource[4] >= 2 and resource[3] >= 1:
-                            soldat.update(x, y)
-                            resource[4] -= 1
-                            resource[3] -= 1
-                        elif d == 30 and resource[3] >= 3 and resource[5] >= 1 and resource[6] >= 1:
-                            tank.update(x, y)
-                            resource[3] -= 3
-                            resource[5] -= 1
-                            resource[6] -= 1
-                        elif d == 40 and resource[3] >= 2 and resource[4] >= 1 and resource[5] >= 1:
-                            moto.update(x, y)
-                            resource[4] -= 1
-                            resource[3] -= 2
-                            resource[5] -= 1
-                        elif d == 100 and brd[cell_y][cell_x] == 4 and resource[4] >= 1:
+                        if d == 10 and resource[4] >= 1 and resource[3] >= 2 and resource[4] > remove_resource[4]\
+                                and resource[3] > remove_resource[3]:
+                            unit.update(x, y, 10)
+                            remove_resource[4] += 1
+                            remove_resource[3] += 2
+                        elif d == 20 and resource[4] >= 1 and resource[3] >= 1 and resource[4] > remove_resource[4] \
+                                and resource[3] > remove_resource[3]:
+                            unit.update(x, y, 20)
+                            remove_resource[4] += 1
+                            remove_resource[3] += 1
+                        elif d == 30 and resource[3] >= 3 and resource[5] >= 1 and resource[6] >= 1 \
+                                and resource[3] > remove_resource[3] and resource[5] > remove_resource[5] \
+                                and resource[6] > remove_resource[6]:
+                            unit.update(x, y, 30)
+                            remove_resource[3] += 3
+                            remove_resource[5] += 1
+                            remove_resource[6] += 1
+                        elif d == 40 and resource[3] >= 2 and resource[4] > 1 and resource[5] >= 1\
+                                and resource[3] > remove_resource[3] and resource[5] > remove_resource[5] \
+                                and resource[4] > remove_resource[4]:
+                            unit.update(x, y, 40)
+                            remove_resource[4] += 1
+                            remove_resource[3] += 2
+                            remove_resource[5] += 1
+                        elif d == 100 and brd[cell_y][cell_x] == 4 and resource[4] > 0\
+                                and resource[4] > remove_resource[4]:
                             brd[cell_y][cell_x] = 100
-                            resource[4] += 2
-                        elif d == 200 and brd[cell_y][cell_x] == 3 and resource[4] >= 2:
+                            remove_resource[4] -= 2
+                        elif d == 200 and brd[cell_y][cell_x] == 3 and resource[4] > 1\
+                                and resource[4] > remove_resource[4] + 1 and resource[3] >= remove_resource[3]:
                             brd[cell_y][cell_x] = 200
-                            resource[3] += 1
-                            resource[4] -= 1
-                        elif d == 400 and brd[cell_y][cell_x] == 6 and resource[3] >= 2 and resource[5] >= 1:
+                            remove_resource[3] -= 1
+                            remove_resource[4] += 1
+                        elif d == 400 and brd[cell_y][cell_x] == 6 and resource[3] >= 2 and resource[5] >= 1\
+                                and resource[3] >= remove_resource[3] and resource[5] >= remove_resource[5]:
                             brd[cell_y][cell_x] = 400
-                            resource[6] += 1
-                            resource[4] -= 2
-                            resource[5] -= 1
-                        elif d == 300 and brd[cell_y][cell_x] == 5 and resource[4] >= 3 and resource[3] >= 2:
+                            remove_resource[6] -= 1
+                            remove_resource[3] += 2
+                            remove_resource[5] += 1
+                        elif d == 300 and brd[cell_y][cell_x] == 5 and resource[4] >= 2 and resource[3] >= 2\
+                                and resource[4] > remove_resource[4] + 1 and resource[3] >= remove_resource[3]:
                             brd[cell_y][cell_x] = 300
-                            resource[5] += 1
-                            resource[4] -= 2
-                            resource[3] -= 2
+                            remove_resource[5] -= 1
+                            remove_resource[4] += 2
+                            remove_resource[3] += 2
+                        unit.render()
                         board.update_board(brd)
                 if step.pressed(event.pos):
-                    step_of_user += 1
-                    artil.update_icon()
-                    soldat.update_icon()
-                    tank.update_icon()
-                    moto.update_icon()
+                    for x in resource.keys():
+                        resource[x] -= remove_resource[x]
+                    if step_of_person == 0:
+                        step_of_person = 1
+                    else:
+                        step_of_person = 0
+                    remove_resource = {3: 0, 4: 0, 5: 0, 6: 0}
+                    text_f = font.render(str(resource[4]), True, (255, 0, 0))
+                    text_i = font.render(str(resource[3]), True, (255, 0, 0))
+                    text_o = font.render(str(resource[5]), True, (255, 0, 0))
+                    text_w = font.render(str(resource[6]), True, (255, 0, 0))
             elif event.type == KEYDOWN:
                 if event.key == K_ESCAPE:
-                    board.save()
                     board.menu()
         screen.fill((42, 92, 3))
         pygame.draw.rect(screen, (10, 96, 150), (60, 30, 1860, 1050))
-        text_f = font.render(str(resource[4]), True, (255, 0, 0))
-        text_i = font.render(str(resource[3]), True, (255, 0, 0))
-        text_o = font.render(str(resource[5]), True, (255, 0, 0))
-        text_w = font.render(str(resource[6]), True, (255, 0, 0))
         screen.blit(text_f, (60, 270))
         screen.blit(text_i, (60, 330))
         screen.blit(text_o, (60, 390))
@@ -833,5 +814,4 @@ if __name__ == '__main__':
         units_sprites.draw(screen)
         pygame.display.flip()
         clock.tick(60)
-        board.save()
     pygame.quit()
