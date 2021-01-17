@@ -28,18 +28,27 @@ builds_sprites = pygame.sprite.Group()
 COLOR_INACTIVE = pygame.Color('lightskyblue3')
 COLOR_ACTIVE = pygame.Color('dodgerblue2')
 FONT = pygame.font.Font(None, 32)
-if mus == 0:
-    pygame.mixer.music.load('data/Егор Летов - Моя оборона.mp3')
-    pygame.mixer.music.set_volume(0)
-    pygame.mixer.music.play()
-    if not pygame.mixer.music.get_busy():
-        mus = 1
-elif mus == 1:
-    pygame.mixer.music.load('data/Soviet.mp3')
-    pygame.mixer.music.set_volume(0)
-    pygame.mixer.music.play()
-    if not pygame.mixer.music.get_busy():
-        mus = 0
+pygame.mixer.music.load('data/Soviet.mp3')
+pygame.mixer.music.set_volume(0.1)
+pygame.mixer.music.play()
+
+
+class Red:
+    def __init__(self):
+        # self.resource = {3: 0, 4: 1, 5: 0, 6: 0}
+        self.resource = {3: 100, 4: 100, 5: 100, 6: 100}
+
+    def res(self):
+        return self.resource
+
+
+class Blue:
+    def __init__(self):
+        # self.resource = {3: 0, 4: 1, 5: 0, 6: 0}
+        self.resource = {3: 100, 4: 100, 5: 100, 6: 100}
+
+    def res(self):
+        return self.resource
 
 
 def load_image(name, colorkey=None):
@@ -575,9 +584,67 @@ class Unit(pygame.sprite.Sprite):
     def update(self, x, y, n=0):
         cell_x = (x - self.left) // self.cell_size
         cell_y = (y - self.top) // self.cell_size
-        self.board_un[cell_y][cell_x] = n
-        self.rect.x = self.left + cell_x * 30
-        self.rect.y = self.top + cell_y * 30
+        if step_of_person == 0 and self.board_un[cell_y][cell_x] == 0:
+            self.board_un[cell_y][cell_x] = int(str(n) + '0')
+        elif step_of_person == 1 and self.board_un[cell_y][cell_x] == 0:
+            self.board_un[cell_y][cell_x] = int(str(n) + '1')
+
+    def get_board(self):
+        return self.board_un
+
+    def render(self):
+        for y in range(35):
+            for x in range(62):
+                position = (x * self.cell_size + self.left, y * self.cell_size + self.top)
+                number_of_unit = str(self.board_un[y][x])
+                if int(number_of_unit[0:2]) == 40 and int(number_of_unit[2]) == 0:
+                    field_image = load_image('moto_brigada_blue.png')
+                    field = pygame.sprite.Sprite(units_sprites)
+                    field.image = field_image
+                    field.rect = field.image.get_rect()
+                    field.rect.x, field.rect.y = position[0], position[1]
+                elif int(number_of_unit[0:2]) == 40 and int(number_of_unit[2]) == 1:
+                    field_image = load_image('moto_brigada_red.png')
+                    field = pygame.sprite.Sprite(units_sprites)
+                    field.image = field_image
+                    field.rect = field.image.get_rect()
+                    field.rect.x, field.rect.y = position[0], position[1]
+                if int(number_of_unit[0:2]) == 20 and int(number_of_unit[2]) == 0:
+                    field_image = load_image('Sprite Of Brigada_blue.png')
+                    field = pygame.sprite.Sprite(units_sprites)
+                    field.image = field_image
+                    field.rect = field.image.get_rect()
+                    field.rect.x, field.rect.y = position[0], position[1]
+                elif int(number_of_unit[0:2]) == 20 and int(number_of_unit[2]) == 1:
+                    field_image = load_image('Sprite Of Brigada_red.png')
+                    field = pygame.sprite.Sprite(units_sprites)
+                    field.image = field_image
+                    field.rect = field.image.get_rect()
+                    field.rect.x, field.rect.y = position[0], position[1]
+                if int(number_of_unit[0:2]) == 10 and int(number_of_unit[2]) == 0:
+                    field_image = load_image('Artillery_blue.png')
+                    field = pygame.sprite.Sprite(units_sprites)
+                    field.image = field_image
+                    field.rect = field.image.get_rect()
+                    field.rect.x, field.rect.y = position[0], position[1]
+                elif int(number_of_unit[0:2]) == 10 and int(number_of_unit[2]) == 1:
+                    field_image = load_image('Artillery_red.png')
+                    field = pygame.sprite.Sprite(units_sprites)
+                    field.image = field_image
+                    field.rect = field.image.get_rect()
+                    field.rect.x, field.rect.y = position[0], position[1]
+                if int(number_of_unit[0:2]) == 30 and int(number_of_unit[2]) == 0:
+                    field_image = load_image('tank_blue.png')
+                    field = pygame.sprite.Sprite(units_sprites)
+                    field.image = field_image
+                    field.rect = field.image.get_rect()
+                    field.rect.x, field.rect.y = position[0], position[1]
+                elif int(number_of_unit[0:2]) == 30 and int(number_of_unit[2]) == 1:
+                    field_image = load_image('tank_red.png')
+                    field = pygame.sprite.Sprite(units_sprites)
+                    field.image = field_image
+                    field.rect = field.image.get_rect()
+                    field.rect.x, field.rect.y = position[0], position[1]
 
 
 class Soldier(Unit):
@@ -589,20 +656,8 @@ class Soldier(Unit):
         super().__init__(*group)
         self.image = Soldier.image
         self.rect = self.image.get_rect()
-        self.rect.x = -30
-        self.rect.y = -30
-
-    def render(self):
-        for y in range(35):
-            for x in range(62):
-                position = (x * self.cell_size + self.left, y * self.cell_size + self.top)
-                size = self.cell_size, self.cell_size
-                if self.board_un[y][x] == 20:
-                    field_image = load_image("Sprite Of Brigada.png")
-                    field = pygame.sprite.Sprite(units_sprites)
-                    field.image = field_image
-                    field.rect = field.image.get_rect()
-                    field.rect.x, field.rect.y = position[0], position[1]
+        self.rect.x = 30
+        self.rect.y = 90
 
 
 class Artillery(Unit):
@@ -614,20 +669,8 @@ class Artillery(Unit):
         super().__init__(*group)
         self.image = Artillery.image
         self.rect = self.image.get_rect()
-        self.rect.x = -30
-        self.rect.y = -30
-
-    def render(self):
-        for y in range(35):
-            for x in range(62):
-                position = (x * self.cell_size + self.left, y * self.cell_size + self.top)
-                size = self.cell_size, self.cell_size
-                if self.board_un[y][x] == 10:
-                    field_image = load_image("Artillery.png")
-                    field = pygame.sprite.Sprite(units_sprites)
-                    field.image = field_image
-                    field.rect = field.image.get_rect()
-                    field.rect.x, field.rect.y = position[0], position[1]
+        self.rect.x = 30
+        self.rect.y = 30
 
 
 class Tank(Unit):
@@ -639,20 +682,8 @@ class Tank(Unit):
         super().__init__(*group)
         self.image = Tank.image
         self.rect = self.image.get_rect()
-        self.rect.x = -30
-        self.rect.y = -30
-
-    def render(self):
-        for y in range(35):
-            for x in range(62):
-                position = (x * self.cell_size + self.left, y * self.cell_size + self.top)
-                size = self.cell_size, self.cell_size
-                if self.board_un[y][x] == 30:
-                    field_image = load_image("tank.png")
-                    field = pygame.sprite.Sprite(units_sprites)
-                    field.image = field_image
-                    field.rect = field.image.get_rect()
-                    field.rect.x, field.rect.y = position[0], position[1]
+        self.rect.x = 30
+        self.rect.y = 150
 
 
 class MotoBrigada(Unit):
@@ -664,20 +695,8 @@ class MotoBrigada(Unit):
         super().__init__(*group)
         self.image = MotoBrigada.image
         self.rect = self.image.get_rect()
-        self.rect.x = -30
-        self.rect.y = -30
-
-    def render(self):
-        for y in range(35):
-            for x in range(62):
-                position = (x * self.cell_size + self.left, y * self.cell_size + self.top)
-                size = self.cell_size, self.cell_size
-                if self.board_un[y][x] == 40:
-                    field_image = load_image("moto_brigada.png")
-                    field = pygame.sprite.Sprite(units_sprites)
-                    field.image = field_image
-                    field.rect = field.image.get_rect()
-                    field.rect.x, field.rect.y = position[0], position[1]
+        self.rect.x = 30
+        self.rect.y = 210
 
 
 if __name__ == '__main__':
@@ -694,17 +713,23 @@ if __name__ == '__main__':
     artil = Artillery(units_sprites)
     tank = Tank(units_sprites)
     moto = MotoBrigada(units_sprites)
+    blue = Blue()
+    red = Red()
     board.place_of_war()
     brd = board.get_board()
     unit = Unit()
     d = 0
     font = pygame.font.Font(None, 30)
-    resource = {3: 0, 4: 1, 5: 0, 6: 0}
+    font2 = pygame.font.Font(None, 40)
+    if step_of_person == 0:
+        resource = blue.res()
+    else:
+        resource = red.res()
     step.create_button(screen, (34, 139, 34), 1700, 1010, 200, 50, 100, 'Закончить ход', (255, 255, 255))
-    text_f = font.render('1', True, (255, 0, 0))
-    text_i = font.render('0', True, (255, 0, 0))
-    text_o = font.render('0', True, (255, 0, 0))
-    text_w = font.render('0', True, (255, 0, 0))
+    text_f = font.render(str(resource[4]), True, (255, 0, 0))
+    text_i = font.render(str(resource[3]), True, (255, 0, 0))
+    text_o = font.render(str(resource[5]), True, (255, 0, 0))
+    text_w = font.render(str(resource[6]), True, (255, 0, 0))
     remove_resource = {3: 0, 4: 0, 5: 0, 6: 0}
     while running:
         for event in pygame.event.get():
@@ -734,34 +759,43 @@ if __name__ == '__main__':
                     cell_x = (x - 60) // 30
                     cell_y = (y - 30) // 30
                     if brd[cell_y][cell_x] in [1, 2, 3, 4, 5, 6]:
+                        # юниты
+                        brd_un = unit.get_board()
                         if d == 10 and resource[4] >= 1 and resource[3] >= 2 and resource[4] > remove_resource[4]\
-                                and resource[3] > remove_resource[3]:
-                            artil.update(x, y, 10)
-                            artil.render()
-                            remove_resource[4] += 1
-                            remove_resource[3] += 2
+                                and resource[3] > remove_resource[3] and brd_un[cell_y][cell_x] == 0:
+                            unit.update(x, y, 10)
+                            resource[4] -= 1
+                            resource[3] -= 2
+                            text_f = font.render(str(resource[4]), True, (255, 0, 0))
+                            text_i = font.render(str(resource[3]), True, (255, 0, 0))
                         elif d == 20 and resource[4] >= 1 and resource[3] >= 1 and resource[4] > remove_resource[4] \
-                                and resource[3] > remove_resource[3]:
-                            soldat.update(x, y, 20)
-                            soldat.render()
-                            remove_resource[4] += 1
-                            remove_resource[3] += 1
+                                and resource[3] > remove_resource[3] and brd_un[cell_y][cell_x] == 0:
+                            unit.update(x, y, 20)
+                            resource[4] -= 1
+                            resource[3] -= 1
+                            text_f = font.render(str(resource[4]), True, (255, 0, 0))
+                            text_i = font.render(str(resource[3]), True, (255, 0, 0))
                         elif d == 30 and resource[3] >= 3 and resource[5] >= 1 and resource[6] >= 1 \
                                 and resource[3] > remove_resource[3] and resource[5] > remove_resource[5] \
-                                and resource[6] > remove_resource[6]:
-                            tank.update(x, y, 30)
-                            tank.render()
-                            remove_resource[3] += 3
-                            remove_resource[5] += 1
-                            remove_resource[6] += 1
+                                and resource[6] > remove_resource[6] and brd_un[cell_y][cell_x] == 0:
+                            unit.update(x, y, 30)
+                            resource[3] -= 3
+                            resource[5] -= 1
+                            resource[6] -= 1
+                            text_i = font.render(str(resource[3]), True, (255, 0, 0))
+                            text_o = font.render(str(resource[5]), True, (255, 0, 0))
+                            text_w = font.render(str(resource[6]), True, (255, 0, 0))
                         elif d == 40 and resource[3] >= 2 and resource[4] > 1 and resource[5] >= 1\
                                 and resource[3] > remove_resource[3] and resource[5] > remove_resource[5] \
-                                and resource[4] > remove_resource[4]:
-                            moto.update(x, y, 40)
-                            moto.render()
-                            remove_resource[4] += 1
-                            remove_resource[3] += 2
-                            remove_resource[5] += 1
+                                and resource[4] > remove_resource[4] and brd_un[cell_y][cell_x] == 0:
+                            unit.update(x, y, 40)
+                            resource[4] -= 1
+                            resource[3] -= 2
+                            resource[5] -= 1
+                            text_f = font.render(str(resource[4]), True, (255, 0, 0))
+                            text_i = font.render(str(resource[3]), True, (255, 0, 0))
+                            text_o = font.render(str(resource[5]), True, (255, 0, 0))
+                        # добыча ресурсов
                         elif d == 100 and brd[cell_y][cell_x] == 4 and resource[4] > 0\
                                 and resource[4] > remove_resource[4]:
                             brd[cell_y][cell_x] = 100
@@ -783,14 +817,17 @@ if __name__ == '__main__':
                             remove_resource[5] -= 1
                             remove_resource[4] += 2
                             remove_resource[3] += 2
+                        unit.render()
                         board.update_board(brd)
                 if step.pressed(event.pos):
                     for x in resource.keys():
                         resource[x] -= remove_resource[x]
                     if step_of_person == 0:
                         step_of_person = 1
+                        resource = red.res()
                     else:
                         step_of_person = 0
+                        resource = blue.res()
                     remove_resource = {3: 0, 4: 0, 5: 0, 6: 0}
                     text_f = font.render(str(resource[4]), True, (255, 0, 0))
                     text_i = font.render(str(resource[3]), True, (255, 0, 0))
@@ -806,6 +843,10 @@ if __name__ == '__main__':
         screen.blit(text_o, (60, 390))
         screen.blit(text_w, (60, 450))
         all_sprites.draw(screen)
+        if step_of_person == 0:
+            screen.blit(font2.render('Xод синих', True, (0, 0, 255)), (1700, 0))
+        else:
+            screen.blit(font2.render('Xод красных', True, (255, 0, 0)), (1700, 0))
         board.render()
         builds_sprites.draw(screen)
         units_sprites.draw(screen)
