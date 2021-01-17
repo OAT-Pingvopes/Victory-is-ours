@@ -41,6 +41,23 @@ elif mus == 1:
     if not pygame.mixer.music.get_busy():
         mus = 0
 
+class Red:
+    def __init__(self):
+        # self.resource = {3: 0, 4: 1, 5: 0, 6: 0}
+        self.resource = {3: 100, 4: 100, 5: 100, 6: 100}
+
+    def res(self):
+        return self.resource
+
+
+class Blue:
+    def __init__(self):
+        # self.resource = {3: 0, 4: 1, 5: 0, 6: 0}
+        self.resource = {3: 100, 4: 100, 5: 100, 6: 100}
+
+    def res(self):
+        return self.resource
+
 
 def load_image(name, colorkey=None):
     fullname = os.path.join('data', name)
@@ -579,6 +596,9 @@ class Unit(pygame.sprite.Sprite):
         elif step_of_person == 1 and self.board_un[cell_y][cell_x] == 0:
             self.board_un[cell_y][cell_x] = int(str(n) + '1')
 
+    def get_board(self):
+        return self.board_un
+
     def render(self):
         for y in range(35):
             for x in range(62):
@@ -700,12 +720,17 @@ if __name__ == '__main__':
     artil = Artillery(units_sprites)
     tank = Tank(units_sprites)
     moto = MotoBrigada(units_sprites)
+    blue = Blue()
+    red = Red()
     board.place_of_war()
     brd = board.get_board()
     unit = Unit()
     d = 0
     font = pygame.font.Font(None, 30)
-    resource = {3: 100, 4: 100, 5: 100, 6: 100}
+    if step_of_person == 0:
+        resource = blue.res()
+    else:
+        resource = red.res()
     step.create_button(screen, (34, 139, 34), 1700, 1010, 200, 50, 100, 'Закончить ход', (255, 255, 255))
     text_f = font.render(str(resource[4]), True, (255, 0, 0))
     text_i = font.render(str(resource[3]), True, (255, 0, 0))
@@ -740,30 +765,43 @@ if __name__ == '__main__':
                     cell_x = (x - 60) // 30
                     cell_y = (y - 30) // 30
                     if brd[cell_y][cell_x] in [1, 2, 3, 4, 5, 6]:
+                        # юниты
+                        brd_un = unit.get_board()
                         if d == 10 and resource[4] >= 1 and resource[3] >= 2 and resource[4] > remove_resource[4]\
-                                and resource[3] > remove_resource[3]:
+                                and resource[3] > remove_resource[3] and brd_un[cell_y][cell_x] == 0:
                             unit.update(x, y, 10)
-                            remove_resource[4] += 1
-                            remove_resource[3] += 2
+                            resource[4] -= 1
+                            resource[3] -= 2
+                            text_f = font.render(str(resource[4]), True, (255, 0, 0))
+                            text_i = font.render(str(resource[3]), True, (255, 0, 0))
                         elif d == 20 and resource[4] >= 1 and resource[3] >= 1 and resource[4] > remove_resource[4] \
-                                and resource[3] > remove_resource[3]:
+                                and resource[3] > remove_resource[3] and brd_un[cell_y][cell_x] == 0:
                             unit.update(x, y, 20)
-                            remove_resource[4] += 1
-                            remove_resource[3] += 1
+                            resource[4] -= 1
+                            resource[3] -= 1
+                            text_f = font.render(str(resource[4]), True, (255, 0, 0))
+                            text_i = font.render(str(resource[3]), True, (255, 0, 0))
                         elif d == 30 and resource[3] >= 3 and resource[5] >= 1 and resource[6] >= 1 \
                                 and resource[3] > remove_resource[3] and resource[5] > remove_resource[5] \
-                                and resource[6] > remove_resource[6]:
+                                and resource[6] > remove_resource[6] and brd_un[cell_y][cell_x] == 0:
                             unit.update(x, y, 30)
-                            remove_resource[3] += 3
-                            remove_resource[5] += 1
-                            remove_resource[6] += 1
+                            resource[3] -= 3
+                            resource[5] -= 1
+                            resource[6] -= 1
+                            text_i = font.render(str(resource[3]), True, (255, 0, 0))
+                            text_o = font.render(str(resource[5]), True, (255, 0, 0))
+                            text_w = font.render(str(resource[6]), True, (255, 0, 0))
                         elif d == 40 and resource[3] >= 2 and resource[4] > 1 and resource[5] >= 1\
                                 and resource[3] > remove_resource[3] and resource[5] > remove_resource[5] \
-                                and resource[4] > remove_resource[4]:
+                                and resource[4] > remove_resource[4] and brd_un[cell_y][cell_x] == 0:
                             unit.update(x, y, 40)
-                            remove_resource[4] += 1
-                            remove_resource[3] += 2
-                            remove_resource[5] += 1
+                            resource[4] -= 1
+                            resource[3] -= 2
+                            resource[5] -= 1
+                            text_f = font.render(str(resource[4]), True, (255, 0, 0))
+                            text_i = font.render(str(resource[3]), True, (255, 0, 0))
+                            text_o = font.render(str(resource[5]), True, (255, 0, 0))
+                        # добыча ресурсов
                         elif d == 100 and brd[cell_y][cell_x] == 4 and resource[4] > 0\
                                 and resource[4] > remove_resource[4]:
                             brd[cell_y][cell_x] = 100
@@ -792,8 +830,10 @@ if __name__ == '__main__':
                         resource[x] -= remove_resource[x]
                     if step_of_person == 0:
                         step_of_person = 1
+                        resource = red.res()
                     else:
                         step_of_person = 0
+                        resource = blue.res()
                     remove_resource = {3: 0, 4: 0, 5: 0, 6: 0}
                     text_f = font.render(str(resource[4]), True, (255, 0, 0))
                     text_i = font.render(str(resource[3]), True, (255, 0, 0))
