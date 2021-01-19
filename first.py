@@ -592,6 +592,17 @@ class Unit(pygame.sprite.Sprite):
     def get_board(self):
         return self.board_un
 
+    def select(self, x, y):
+        cell_x = (x - self.left) // self.cell_size
+        cell_y = (y - self.top) // self.cell_size
+        if self.board_un[cell_y][cell_x] != 0:
+            return (x, y)
+        else:
+            return (-30, -30)
+
+    def update_board(self, brd_un):
+        self.board_un = brd_un
+
     def render(self):
         for y in range(35):
             for x in range(62):
@@ -721,6 +732,7 @@ if __name__ == '__main__':
     d = 0
     font = pygame.font.Font(None, 30)
     font2 = pygame.font.Font(None, 40)
+    position = (-30, -30)
     if step_of_person == 0:
         resource = blue.res()
     else:
@@ -755,9 +767,25 @@ if __name__ == '__main__':
                         d = 300
                     if 450 <= y <= 480 and 30 <= x <= 60:
                         d = 400
+                    if x >= 60 and y >= 30:
+                        cell_x = (x - 60) // 30
+                        cell_y = (y - 30) // 30
+                        position = unit.select(cell_x * 30 + 60, cell_y * 30 + 30)
+                        d = 0
                 if event.button == 3:
                     cell_x = (x - 60) // 30
                     cell_y = (y - 30) // 30
+                    if position != (-30, -30):
+                        brd_un = unit.get_board()
+                        pos_x, pos_y = (position[0] - 60) // 30, (position[1] - 30) // 30
+                        if 2 >= cell_y - pos_y >= -2 and 2 >= cell_x - pos_x >= -2:
+                            brd_un[cell_y][cell_x] = brd_un[pos_y][pos_x]
+                            brd_un[pos_y][pos_x] = 0
+                            unit.update_board(brd_un)
+                            for sprite in units_sprites:
+                                if sprite.rect.x == position[0] and sprite.rect.y == position[1]:
+                                    sprite.kill()
+                            position = (-30, -30)
                     if brd[cell_y][cell_x] in [1, 2, 3, 4, 5, 6]:
                         # юниты
                         brd_un = unit.get_board()
@@ -850,6 +878,7 @@ if __name__ == '__main__':
         board.render()
         builds_sprites.draw(screen)
         units_sprites.draw(screen)
+        pygame.draw.rect(screen, 'white', (position, (30, 30)), 2)
         pygame.display.flip()
         clock.tick(60)
     pygame.quit()
