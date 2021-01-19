@@ -32,8 +32,6 @@ FONT = pygame.font.Font(None, 32)
 sock = socket.socket()
 host = ''
 port = 5050
-sock.bind((host, port))
-sock.listen(1)
 if mus == 0:
     pygame.mixer.music.load('data/Agression.mp3')
     pygame.mixer.music.set_volume(0)
@@ -80,6 +78,7 @@ class InputBox:
         self.rect = pygame.Rect(x, y, w, h)
         self.color = COLOR_INACTIVE
         self.text = text
+        self.con = 0
         self.txt_surface = FONT.render(text, True, self.color)
         self.active = False
         nick = open('data/cfg.txt', mode='r').readlines()[0].split()[2]
@@ -125,9 +124,13 @@ class InputBox:
         # Blit the rect.
         pygame.draw.rect(screen, self.color, self.rect, 2)
 
-    def connect(self):
-        host = self.text
-        sock.connect((host, port))
+    def connect_to(self):
+        con = str(self.text)
+        port = 5050
+        try:
+            sock.connect((con, port))
+        except:
+            self.txt_surface = FONT.render('Connection lost', True, self.color)
 
 
 class Button:
@@ -509,7 +512,12 @@ class Board:
                     if reg.pressed(event.pos):
                         input_box1.register()
                     if ip_conn.pressed(event.pos):
-                        ip.connect()
+                        try:
+                            ip.connect_to()
+                            show = False
+                            self.b = 1
+                        except:
+                            continue
 
                 elif event.type == KEYDOWN:
                     if event.key == K_ESCAPE and self.b == 1:
@@ -730,7 +738,7 @@ if __name__ == '__main__':
     clock = pygame.time.Clock()
     pygame.init()
     pygame.display.set_caption('Victory is ours')
-    screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+    screen = pygame.display.set_mode((1920, 1080))
     board = Board(62, 35)
     board.menu()
     board.set_view(60, 30, 30)
