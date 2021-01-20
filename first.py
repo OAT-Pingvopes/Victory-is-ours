@@ -20,6 +20,7 @@ c = 0
 # 200 - рудник железа
 # 300 - нефтекачалка
 # 400 - рудник вольфрама
+# 500 - баррак
 step_of_person = 0
 mus = 0
 all_sprites = pygame.sprite.Group()
@@ -342,6 +343,8 @@ class Board:
         self.left = 60
         self.top = 30
         self.cell_size = 30
+        self.board[16][12], self.board[16][13], self.board[17][12], self.board[17][13] = 1000, '-', '-', '-'
+        self.board[16][49], self.board[16][50], self.board[17][49], self.board[17][50] = 2000, '-', '-', '-'
 
     def load_saves(self):
         load_file = open('data/save.txt', mode='r').readlines()
@@ -388,6 +391,18 @@ class Board:
                     field.image = field_image
                     field.rect = field.image.get_rect()
                     field.rect.x, field.rect.y = position[0], position[1]
+                elif self.board[y][x] == 1000:
+                    field_image = load_image("main_build_blue.png")
+                    field = pygame.sprite.Sprite(all_sprites)
+                    field.image = field_image
+                    field.rect = field.image.get_rect()
+                    field.rect.x, field.rect.y = position[0], position[1]
+                elif self.board[y][x] == 2000:
+                    field_image = load_image("main_build_red.png")
+                    field = pygame.sprite.Sprite(all_sprites)
+                    field.image = field_image
+                    field.rect = field.image.get_rect()
+                    field.rect.x, field.rect.y = position[0], position[1]
                 if y <= 10:
                     position = (30, y * 2 * self.cell_size + self.top)
                     size = self.cell_size, self.cell_size
@@ -408,6 +423,7 @@ class Board:
         IronMine(builds_sprites).update(30, self.cell_size * 10 + self.top)
         OilPump(builds_sprites).update(30, self.cell_size * 12 + self.top)
         WolframMine(builds_sprites).update(30, self.cell_size * 14 + self.top)
+        Barrak(builds_sprites).update(0, self.cell_size * 16 + self.top)
         for y in range(self.height):
             for x in range(self.width):
                 position = (x * self.cell_size + self.left, y * self.cell_size + self.top)
@@ -421,6 +437,8 @@ class Board:
                     OilPump(units_sprites).update(position[0], position[1])
                 elif self.board[y][x] == 400:
                     WolframMine(units_sprites).update(position[0], position[1])
+                elif self.board[y][x] == 500:
+                    Barrak(units_sprites).update(position[0], position[1])
         step.create_button(screen, (34, 139, 34), 1700, 1010, 200, 50, 100, 'Закончить ход', (255, 255, 255))
 
     def on_click(self, cell):
@@ -533,6 +551,17 @@ class Forester(Build):
     def __init__(self, *group):
         super().__init__(*group)
         self.image = Forester.image
+        self.rect = self.image.get_rect()
+        self.rect.x = -30
+        self.rect.y = -30
+
+
+class Barrak(Build):
+    image = load_image('barracks.png')
+
+    def __init__(self, *group):
+        super().__init__(*group)
+        self.image = Barrak.image
         self.rect = self.image.get_rect()
         self.rect.x = -30
         self.rect.y = -30
@@ -767,6 +796,8 @@ if __name__ == '__main__':
                         d = 300
                     if 450 <= y <= 480 and 30 <= x <= 60:
                         d = 400
+                    if 510 <= y <= 540 and 30 <= x <= 60:
+                        d = 500
                     if x >= 60 and y >= 30:
                         cell_x = (x - 60) // 30
                         cell_y = (y - 30) // 30
@@ -778,73 +809,91 @@ if __name__ == '__main__':
                     if position != (-30, -30):
                         brd_un = unit.get_board()
                         pos_x, pos_y = (position[0] - 60) // 30, (position[1] - 30) // 30
-                        if 2 >= cell_y - pos_y >= -2 and 2 >= cell_x - pos_x >= -2:
+                        if 2 >= cell_y - pos_y >= -2 and 2 >= cell_x - pos_x >= -2 and brd[cell_y][cell_x] == 2\
+                                and str(brd_un[pos_y][pos_x])[-1] == str(step_of_person):
                             brd_un[cell_y][cell_x] = brd_un[pos_y][pos_x]
                             brd_un[pos_y][pos_x] = 0
                             unit.update_board(brd_un)
                             for sprite in units_sprites:
                                 if sprite.rect.x == position[0] and sprite.rect.y == position[1]:
                                     sprite.kill()
+                                if str(brd_un[cell_y][cell_x])[-1] == str(step_of_person) and\
+                                        sprite.rect.x == cell_x * 30 + 60 and sprite.rect.y == cell_y * 30 + 30:
+                                    sprite.kill()
                             position = (-30, -30)
                     if brd[cell_y][cell_x] in [1, 2, 3, 4, 5, 6]:
                         # юниты
                         brd_un = unit.get_board()
-                        if d == 10 and resource[4] >= 1 and resource[3] >= 2 and resource[4] > remove_resource[4]\
-                                and resource[3] > remove_resource[3] and brd_un[cell_y][cell_x] == 0:
-                            unit.update(x, y, 10)
-                            resource[4] -= 1
-                            resource[3] -= 2
-                            text_f = font.render(str(resource[4]), True, (255, 0, 0))
-                            text_i = font.render(str(resource[3]), True, (255, 0, 0))
-                        elif d == 20 and resource[4] >= 1 and resource[3] >= 1 and resource[4] > remove_resource[4] \
-                                and resource[3] > remove_resource[3] and brd_un[cell_y][cell_x] == 0:
-                            unit.update(x, y, 20)
-                            resource[4] -= 1
-                            resource[3] -= 1
-                            text_f = font.render(str(resource[4]), True, (255, 0, 0))
-                            text_i = font.render(str(resource[3]), True, (255, 0, 0))
-                        elif d == 30 and resource[3] >= 3 and resource[5] >= 1 and resource[6] >= 1 \
-                                and resource[3] > remove_resource[3] and resource[5] > remove_resource[5] \
-                                and resource[6] > remove_resource[6] and brd_un[cell_y][cell_x] == 0:
-                            unit.update(x, y, 30)
-                            resource[3] -= 3
-                            resource[5] -= 1
-                            resource[6] -= 1
-                            text_i = font.render(str(resource[3]), True, (255, 0, 0))
-                            text_o = font.render(str(resource[5]), True, (255, 0, 0))
-                            text_w = font.render(str(resource[6]), True, (255, 0, 0))
-                        elif d == 40 and resource[3] >= 2 and resource[4] > 1 and resource[5] >= 1\
-                                and resource[3] > remove_resource[3] and resource[5] > remove_resource[5] \
-                                and resource[4] > remove_resource[4] and brd_un[cell_y][cell_x] == 0:
-                            unit.update(x, y, 40)
-                            resource[4] -= 1
-                            resource[3] -= 2
-                            resource[5] -= 1
-                            text_f = font.render(str(resource[4]), True, (255, 0, 0))
-                            text_i = font.render(str(resource[3]), True, (255, 0, 0))
-                            text_o = font.render(str(resource[5]), True, (255, 0, 0))
-                        # добыча ресурсов
-                        elif d == 100 and brd[cell_y][cell_x] == 4 and resource[4] > 0\
-                                and resource[4] > remove_resource[4]:
-                            brd[cell_y][cell_x] = 100
-                            remove_resource[4] -= 2
-                        elif d == 200 and brd[cell_y][cell_x] == 3 and resource[4] > 1\
-                                and resource[4] > remove_resource[4] + 1 and resource[3] >= remove_resource[3]:
-                            brd[cell_y][cell_x] = 200
-                            remove_resource[3] -= 1
-                            remove_resource[4] += 1
-                        elif d == 400 and brd[cell_y][cell_x] == 6 and resource[3] >= 2 and resource[5] >= 1\
-                                and resource[3] >= remove_resource[3] and resource[5] >= remove_resource[5]:
-                            brd[cell_y][cell_x] = 400
-                            remove_resource[6] -= 1
-                            remove_resource[3] += 2
-                            remove_resource[5] += 1
-                        elif d == 300 and brd[cell_y][cell_x] == 5 and resource[4] >= 2 and resource[3] >= 2\
-                                and resource[4] > remove_resource[4] + 1 and resource[3] >= remove_resource[3]:
-                            brd[cell_y][cell_x] = 300
-                            remove_resource[5] -= 1
-                            remove_resource[4] += 2
-                            remove_resource[3] += 2
+                        if (5 >= cell_y - 17 >= -5 or 5 >= cell_y - 16 >= -5) and\
+                            (5 >= cell_x - 12 >= -5 or 5 >= cell_x - 13 >= -5 or 5 >= cell_x - 49 >= -5 or
+                             5 >= cell_x - 50 >= -5) or brd[cell_y][cell_x] == 1:
+                            if d == 10 and resource[4] >= 1 and resource[3] >= 2 and resource[4] > remove_resource[4]\
+                                    and resource[3] > remove_resource[3] and brd_un[cell_y][cell_x] == 0:
+                                unit.update(x, y, 10)
+                                resource[4] -= 1
+                                resource[3] -= 2
+                                text_f = font.render(str(resource[4]), True, (255, 0, 0))
+                                text_i = font.render(str(resource[3]), True, (255, 0, 0))
+                            elif d == 20 and resource[4] >= 1 and resource[3] >= 1 and resource[4] > remove_resource[4]\
+                                    and resource[3] > remove_resource[3] and brd_un[cell_y][cell_x] == 0:
+                                unit.update(x, y, 20)
+                                resource[4] -= 1
+                                resource[3] -= 1
+                                text_f = font.render(str(resource[4]), True, (255, 0, 0))
+                                text_i = font.render(str(resource[3]), True, (255, 0, 0))
+                            elif d == 30 and resource[3] >= 3 and resource[5] >= 1 and resource[6] >= 1 \
+                                    and resource[3] > remove_resource[3] and resource[5] > remove_resource[5] \
+                                    and resource[6] > remove_resource[6] and brd_un[cell_y][cell_x] == 0:
+                                unit.update(x, y, 30)
+                                resource[3] -= 3
+                                resource[5] -= 1
+                                resource[6] -= 1
+                                text_i = font.render(str(resource[3]), True, (255, 0, 0))
+                                text_o = font.render(str(resource[5]), True, (255, 0, 0))
+                                text_w = font.render(str(resource[6]), True, (255, 0, 0))
+                            elif d == 40 and resource[3] >= 2 and resource[4] > 1 and resource[5] >= 1\
+                                    and resource[3] > remove_resource[3] and resource[5] > remove_resource[5] \
+                                    and resource[4] > remove_resource[4] and brd_un[cell_y][cell_x] == 0:
+                                unit.update(x, y, 40)
+                                resource[4] -= 1
+                                resource[3] -= 2
+                                resource[5] -= 1
+                                text_f = font.render(str(resource[4]), True, (255, 0, 0))
+                                text_i = font.render(str(resource[3]), True, (255, 0, 0))
+                                text_o = font.render(str(resource[5]), True, (255, 0, 0))
+                            # добыча ресурсов
+                            elif d == 100 and brd[cell_y][cell_x] == 4 and resource[4] > 0\
+                                    and resource[4] > remove_resource[4]:
+                                brd[cell_y][cell_x] = 100
+                                remove_resource[4] -= 3
+                                remove_resource[4] += 1
+                            elif d == 200 and brd[cell_y][cell_x] == 3 and resource[4] > 1\
+                                    and resource[4] > remove_resource[4] + 1 and resource[3] >= remove_resource[3]:
+                                brd[cell_y][cell_x] = 200
+                                remove_resource[3] -= 1
+                                remove_resource[4] += 1
+                            elif d == 400 and brd[cell_y][cell_x] == 6 and resource[3] >= 2 and resource[5] >= 1\
+                                    and resource[3] >= remove_resource[3] and resource[5] >= remove_resource[5]:
+                                brd[cell_y][cell_x] = 400
+                                remove_resource[6] -= 1
+                                remove_resource[3] += 2
+                                remove_resource[5] += 1
+                            elif d == 300 and brd[cell_y][cell_x] == 5 and resource[4] >= 2 and resource[3] >= 2\
+                                    and resource[4] > remove_resource[4] + 1 and resource[3] >= remove_resource[3]:
+                                brd[cell_y][cell_x] = 300
+                                remove_resource[5] -= 1
+                                remove_resource[4] += 2
+                                remove_resource[3] += 2
+                            elif d == 500 and resource[4] >= 2 and resource[3] >= 2\
+                                    and resource[4] > remove_resource[4] + 1 and resource[3] >= remove_resource[3]:
+                                brd[cell_y][cell_x], brd[cell_y + 1][cell_x], brd[cell_y][cell_x + 1],\
+                                brd[cell_y + 1][cell_x + 1] = 500, '-', '-', '-'
+                                for i in range(10):
+                                    for j in range(10):
+                                        if brd[cell_y - 5 + i][cell_x - 5 + j] == 2:
+                                            brd[cell_y - 5 + i][cell_x - 5 + j] = 1
+                                remove_resource[4] += 2
+                                remove_resource[3] += 2
                         unit.render()
                         board.update_board(brd)
                 if step.pressed(event.pos):
