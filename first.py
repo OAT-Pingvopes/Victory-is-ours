@@ -452,15 +452,8 @@ class Board:
         for x in range(len(self.board)):
             for y in range(len(self.board[x])):
                 if x == cell_y and y == cell_x:
-                    if self.board[x][y] == 1:
-                        self.board[x][y] = 2
-                    elif self.board[x][y] == 0:
+                    if self.board[x][y] == 0:
                         self.board[x][y] = 0
-                    else:
-                        for i in range(len(self.board)):
-                            for j in range(len(self.board[x])):
-                                if self.board[i][j] == 1:
-                                    self.board[i][j] = 2
         return cell_x, cell_y
 
     def get_click(self, mouse_pos):
@@ -810,7 +803,7 @@ if __name__ == '__main__':
                         brd_un = unit.get_board()
                         pos_x, pos_y = (position[0] - 60) // 30, (position[1] - 30) // 30
                         if 2 >= cell_y - pos_y >= -2 and 2 >= cell_x - pos_x >= -2 and brd[cell_y][cell_x] == 2\
-                                and str(brd_un[pos_y][pos_x])[-1] == str(step_of_person):
+                                and str(brd_un[pos_y][pos_x])[-1] != str(step_of_person):
                             brd_un[cell_y][cell_x] = brd_un[pos_y][pos_x]
                             brd_un[pos_y][pos_x] = 0
                             unit.update_board(brd_un)
@@ -821,12 +814,16 @@ if __name__ == '__main__':
                                         sprite.rect.x == cell_x * 30 + 60 and sprite.rect.y == cell_y * 30 + 30:
                                     sprite.kill()
                             position = (-30, -30)
-                    if brd[cell_y][cell_x] in [1, 2, 3, 4, 5, 6]:
+                    if brd[cell_y][cell_x] in [1, 2]:
                         # юниты
                         brd_un = unit.get_board()
-                        if (5 >= cell_y - 17 >= -5 or 5 >= cell_y - 16 >= -5) and\
-                            (5 >= cell_x - 12 >= -5 or 5 >= cell_x - 13 >= -5 or 5 >= cell_x - 49 >= -5 or
-                             5 >= cell_x - 50 >= -5) or brd[cell_y][cell_x] == 1:
+                        if ((step_of_person == 0 and (5 >= cell_x - 12 >= -5 or 5 >= cell_x - 13 >= -5) and
+                             (5 >= cell_y - 17 >= -5 or 5 >= cell_y - 16 >= -5)) or
+                            (step_of_person == 1 and (5 >= cell_x - 49 >= -5 or 5 >= cell_x - 50 >= -5))
+                                and (5 >= cell_y - 17 >= -5 or 5 >= cell_y - 16 >= -5))\
+                                or brd[cell_y][cell_x] == 1:
+                            for z in brd:
+                                print(z)
                             if d == 10 and resource[4] >= 1 and resource[3] >= 2 and resource[4] > remove_resource[4]\
                                     and resource[3] > remove_resource[3] and brd_un[cell_y][cell_x] == 0:
                                 unit.update(x, y, 10)
@@ -886,8 +883,7 @@ if __name__ == '__main__':
                                 remove_resource[3] += 2
                             elif d == 500 and resource[4] >= 2 and resource[3] >= 2\
                                     and resource[4] > remove_resource[4] + 1 and resource[3] >= remove_resource[3]:
-                                brd[cell_y][cell_x], brd[cell_y + 1][cell_x], brd[cell_y][cell_x + 1],\
-                                brd[cell_y + 1][cell_x + 1] = 500, '-', '-', '-'
+                                brd[cell_y][cell_x] = 500
                                 for i in range(10):
                                     for j in range(10):
                                         if brd[cell_y - 5 + i][cell_x - 5 + j] == 2:
@@ -913,7 +909,6 @@ if __name__ == '__main__':
             elif event.type == KEYDOWN:
                 if event.key == K_ESCAPE:
                     board.menu()
-        screen.fill((42, 92, 3))
         pygame.draw.rect(screen, (10, 96, 150), (60, 30, 1860, 1050))
         screen.blit(text_f, (60, 270))
         screen.blit(text_i, (60, 330))
