@@ -129,6 +129,7 @@ class InputBox:
         port = 5050
         try:
             sock.connect((con, port))
+            return (1, False)
         except:
             self.txt_surface = FONT.render('Connection lost', True, self.color)
 
@@ -498,7 +499,9 @@ class Board:
                     elif start.pressed(event.pos) and self.nick:
                         cont.create_button(screen, (34, 139, 34), 860, 430, 200, 50, 100,
                                             'Продолжить', (255, 255, 255))
-                        self.conn, addr = sock.accept()
+                        sock.bind((host, port))
+                        sock.listen(1)
+                        conn, addr = sock.accept()
                         show = False
                         self.b = 1
                     elif save.pressed(event.pos) and self.b == 1:
@@ -513,9 +516,7 @@ class Board:
                         input_box1.register()
                     if ip_conn.pressed(event.pos):
                         try:
-                            ip.connect_to()
-                            show = False
-                            self.b = 1
+                            self.b, show = ip.connect_to()
                         except:
                             continue
 
