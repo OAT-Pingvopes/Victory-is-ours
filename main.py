@@ -32,7 +32,7 @@ FONT = pygame.font.Font(None, 32)
 sock = socket.socket()
 host = ''
 port = 5050
-pygame.mixer.music.load('data/Soviet.mp3')
+pygame.mixer.music.load('data/Agression.mp3')
 pygame.mixer.music.set_volume(0.1)
 pygame.mixer.music.play(-1)
 
@@ -505,6 +505,7 @@ class Board:
                         sock.bind((host, port))
                         sock.listen(1)
                         conn, addr = sock.accept()
+                        conn.send((f'self.{self.board}').encode('utf-8'))
                         show = False
                         self.b = 1
                     elif save.pressed(event.pos) and self.b == 1:
