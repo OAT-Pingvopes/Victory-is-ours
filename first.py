@@ -1,6 +1,7 @@
 import os
 import random
 import sys
+import socket
 from pygame.locals import *
 import pygame
 pygame.init()
@@ -22,13 +23,15 @@ c = 0
 # 400 - рудник вольфрама
 # 500 - баррак
 step_of_person = 0
-mus = 0
 all_sprites = pygame.sprite.Group()
 units_sprites = pygame.sprite.Group()
 builds_sprites = pygame.sprite.Group()
 COLOR_INACTIVE = pygame.Color('lightskyblue3')
 COLOR_ACTIVE = pygame.Color('dodgerblue2')
 FONT = pygame.font.Font(None, 32)
+sock = socket.socket()
+host = ''
+port = 5050
 pygame.mixer.music.load('data/Soviet.mp3')
 pygame.mixer.music.set_volume(0.1)
 pygame.mixer.music.play()
@@ -67,10 +70,12 @@ class InputBox:
         self.rect = pygame.Rect(x, y, w, h)
         self.color = COLOR_INACTIVE
         self.text = text
+        self.con = 0
         self.txt_surface = FONT.render(text, True, self.color)
         self.active = False
         nick = open('data/cfg.txt', mode='r').readlines()[0].split()[2]
-        self.txt_surface = FONT.render(nick[1:-1], True, self.color)
+        if x == 1700:
+            self.txt_surface = FONT.render(nick[1:-1], True, self.color)
 
     def handle_event(self, event):
         if event.type == pygame.MOUSEBUTTONDOWN:
@@ -85,13 +90,13 @@ class InputBox:
         if event.type == pygame.KEYDOWN:
             if self.active:
                 if event.key == pygame.K_RETURN:
-                    print(self.text)
                     self.text = ''
                 elif event.key == pygame.K_BACKSPACE:
                     self.text = self.text[:-1]
                 else:
                     self.text += event.unicode
                 # Re-render the text.
+                print(self.text)
                 self.txt_surface = FONT.render(self.text, True, self.color)
 
     def register(self):
@@ -110,6 +115,15 @@ class InputBox:
         screen.blit(self.txt_surface, (self.rect.x+5, self.rect.y+5))
         # Blit the rect.
         pygame.draw.rect(screen, self.color, self.rect, 2)
+
+    def connect_to(self):
+        con = str(self.text)
+        port = 5050
+        try:
+            sock.connect((con, port))
+            return (1, False)
+        except:
+            self.txt_surface = FONT.render('Connection lost', True, self.color)
 
 
 class Button:
@@ -469,12 +483,15 @@ class Board:
     def menu(self):
         background = pygame.image.load('data/start_menu.png')
         reg = Button()
+        ip_conn = Button()
         close = Button()
         start = Button()
+        cont = Button()
         save = Button()
         load = Button()
         input_box1 = InputBox(1700, 1000, 200, 32)
-        input_boxes = [input_box1]
+        ip = InputBox(50, 10, 200, 32)
+        input_boxes = [input_box1, ip]
         show = True
         while show:
             for event in pygame.event.get():
@@ -483,8 +500,11 @@ class Board:
                     if close.pressed(event.pos):
                         exit()
                     elif start.pressed(event.pos) and self.nick:
-                        start.create_button(screen, (34, 139, 34), 860, 430, 200, 50, 100,
+                        cont.create_button(screen, (34, 139, 34), 860, 430, 200, 50, 100,
                                             'Продолжить', (255, 255, 255))
+                        sock.bind((host, port))
+                        sock.listen(1)
+                        conn, addr = sock.accept()
                         show = False
                         self.b = 1
                     elif save.pressed(event.pos) and self.b == 1:
@@ -497,7 +517,11 @@ class Board:
                         show = False
                     if reg.pressed(event.pos):
                         input_box1.register()
-
+                    if ip_conn.pressed(event.pos):
+                        try:
+                            self.b, show = ip.connect_to()
+                        except:
+                            continue
                 elif event.type == KEYDOWN:
                     if event.key == K_ESCAPE and self.b == 1:
                         show = False
@@ -737,7 +761,7 @@ if __name__ == '__main__':
     clock = pygame.time.Clock()
     pygame.init()
     pygame.display.set_caption('Victory is ours')
-    screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+    screen = pygame.display.set_mode((1920, 1080))
     board = Board(62, 35)
     board.menu()
     board.set_view(60, 30, 30)
