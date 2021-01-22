@@ -5,6 +5,7 @@ import socket
 from pygame.locals import *
 import pygame
 pygame.init()
+b = 2
 c = 0
 # 0 - вода
 # 1 - выделенная клетка
@@ -32,7 +33,7 @@ FONT = pygame.font.Font(None, 32)
 sock = socket.socket()
 host = ''
 port = 5050
-pygame.mixer.music.load('data/Soviet.mp3')
+pygame.mixer.music.load('data/Егор Летов - Моя оборона.mp3')
 pygame.mixer.music.set_volume(0.1)
 pygame.mixer.music.play(-1)
 
@@ -357,8 +358,8 @@ class Board:
         self.left = 60
         self.top = 30
         self.cell_size = 30
-        self.board[16][12], self.board[16][13], self.board[17][12], self.board[17][13] = 1000, '-', '-', '-'
-        self.board[16][49], self.board[16][50], self.board[17][49], self.board[17][50] = 2000, '-', '-', '-'
+        self.board[16][12], self.board[16][13], self.board[17][12], self.board[17][13] = 1000, '--', '--', '--'
+        self.board[16][49], self.board[16][50], self.board[17][49], self.board[17][50] = 2000, '-|', '-|', '-|'
 
     def load_saves(self):
         load_file = open('data/save.txt', mode='r').readlines()
@@ -502,9 +503,10 @@ class Board:
                     elif start.pressed(event.pos) and self.nick:
                         cont.create_button(screen, (34, 139, 34), 860, 430, 200, 50, 100,
                                             'Продолжить', (255, 255, 255))
-                        sock.bind((host, port))
-                        sock.listen(1)
-                        conn, addr = sock.accept()
+                        #sock.bind((host, port))
+                        #sock.listen(1)
+                        #conn, addr = sock.accept()
+                        #conn.send((f'self.{self.board}').encode('utf-8'))
                         show = False
                         self.b = 1
                     elif save.pressed(event.pos) and self.b == 1:
@@ -829,6 +831,10 @@ if __name__ == '__main__':
                     if position != (-30, -30):
                         brd_un = unit.get_board()
                         pos_x, pos_y = (position[0] - 60) // 30, (position[1] - 30) // 30
+                        if step_of_person == 0 and brd[cell_y][cell_x] in [2000, '-|']:
+                            b = 0
+                        elif step_of_person == 1 and brd[cell_y][cell_x] in [1000, '--']:
+                            b = 1
                         if 2 >= cell_y - pos_y >= -2 and 2 >= cell_x - pos_x >= -2 and brd[cell_y][cell_x] == 2\
                                 and str(brd_un[pos_y][pos_x])[-1] != str(step_of_person):
                             brd_un[cell_y][cell_x] = brd_un[pos_y][pos_x]
@@ -849,8 +855,6 @@ if __name__ == '__main__':
                             (step_of_person == 1 and (5 >= cell_x - 49 >= -5 or 5 >= cell_x - 50 >= -5))
                                 and (5 >= cell_y - 17 >= -5 or 5 >= cell_y - 16 >= -5))\
                                 or brd[cell_y][cell_x] == 1:
-                            for z in brd:
-                                print(z)
                             if d == 10 and resource[4] >= 1 and resource[3] >= 2 and resource[4] > remove_resource[4]\
                                     and resource[3] > remove_resource[3] and brd_un[cell_y][cell_x] == 0:
                                 unit.update(x, y, 10)
@@ -909,16 +913,22 @@ if __name__ == '__main__':
                                 remove_resource[4] += 2
                                 remove_resource[3] += 2
                             elif d == 500 and resource[4] >= 2 and resource[3] >= 2\
-                                    and resource[4] > remove_resource[4] + 1 and resource[3] >= remove_resource[3]:
-                                brd[cell_y][cell_x] = 500
+                                    and resource[4] > remove_resource[4] + 1 and resource[3] >= remove_resource[3]\
+                                    and brd[cell_y + 1][cell_x] in [2, 1, '--', '-|', 1000, 2000] and\
+                                    brd[cell_y][cell_x + 1] in [2, 1, '--', '-|', 1000, 2000]\
+                                    and brd[cell_y + 1][cell_x + 1] in [2, 1, '--', '-|', 1000, 2000]:
+                                brd[cell_y][cell_x], brd[cell_y + 1][cell_x + 1], brd[cell_y + 1][cell_x],\
+                                brd[cell_y][cell_x + 1] = 500, '-', '-', '-'
                                 for i in range(10):
                                     for j in range(10):
-                                        if brd[cell_y - 5 + i][cell_x - 5 + j] == 2:
-                                            brd[cell_y - 5 + i][cell_x - 5 + j] = 1
+                                        if brd[cell_y - 4 + i][cell_x - 4 + j] == 2:
+                                            brd[cell_y - 4 + i][cell_x - 4 + j] = 1
                                 remove_resource[4] += 2
                                 remove_resource[3] += 2
                         unit.render()
                         board.update_board(brd)
+                        for z in brd:
+                            print(z)
                 if step.pressed(event.pos):
                     for x in resource.keys():
                         resource[x] -= remove_resource[x]
@@ -946,6 +956,10 @@ if __name__ == '__main__':
             screen.blit(font2.render('Xод синих', True, (0, 0, 255)), (1700, 0))
         else:
             screen.blit(font2.render('Xод красных', True, (255, 0, 0)), (1700, 0))
+        if b == 0:
+            screen.fill('red')
+        elif b == 1:
+            screen.fill('blue')
         board.render()
         builds_sprites.draw(screen)
         units_sprites.draw(screen)
