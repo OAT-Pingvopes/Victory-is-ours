@@ -34,7 +34,7 @@ host = ''
 port = 5050
 pygame.mixer.music.load('data/Soviet.mp3')
 pygame.mixer.music.set_volume(0.1)
-pygame.mixer.music.play()
+pygame.mixer.music.play(-1)
 
 
 class Red:
@@ -522,6 +522,7 @@ class Board:
                             self.b, show = ip.connect_to()
                         except:
                             continue
+
                 elif event.type == KEYDOWN:
                     if event.key == K_ESCAPE and self.b == 1:
                         show = False
@@ -536,6 +537,8 @@ class Board:
             close.create_button(screen, (34, 139, 34), 860, 700, 200, 50, 100, 'Выйти', (255, 255, 255))
             reg.create_button(screen, (34, 139, 34), 1450, 991, 200, 50, 100,
                               'Принять Ник', (255, 255, 255))
+            ip_conn.create_button(screen, (34, 139, 34), 275, 12, 200, 50, 100,
+                              'Connect', (255, 255, 255))
             save.create_button(screen, (34, 139, 34), 860, 520, 200, 50, 100, 'Сохранить', (255, 255, 255))
             load.create_button(screen, (34, 139, 34), 860, 610, 200, 50, 100, 'Загрузить', (255, 255, 255))
             if self.b == 0:
