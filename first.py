@@ -927,8 +927,6 @@ if __name__ == '__main__':
                                 remove_resource[3] += 2
                         unit.render()
                         board.update_board(brd)
-                        for z in brd:
-                            print(z)
                 if step.pressed(event.pos):
                     for x in resource.keys():
                         resource[x] -= remove_resource[x]
