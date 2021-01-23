@@ -847,14 +847,14 @@ if __name__ == '__main__':
                                         sprite.rect.x == cell_x * 30 + 60 and sprite.rect.y == cell_y * 30 + 30:
                                     sprite.kill()
                             position = (-30, -30)
-                    if brd[cell_y][cell_x] in [1, 2]:
+                    if brd[cell_y][cell_x] in [1, 2, 111, 112, 3, 4, 5, 6]:
                         # юниты
                         brd_un = unit.get_board()
                         if ((step_of_person == 0 and (5 >= cell_x - 12 >= -5 or 5 >= cell_x - 13 >= -5) and
                              (5 >= cell_y - 17 >= -5 or 5 >= cell_y - 16 >= -5)) or
                             (step_of_person == 1 and (5 >= cell_x - 49 >= -5 or 5 >= cell_x - 50 >= -5))
                                 and (5 >= cell_y - 17 >= -5 or 5 >= cell_y - 16 >= -5))\
-                                or brd[cell_y][cell_x] == 1:
+                                or brd[cell_y][cell_x] == step_of_person + 111:
                             if d == 10 and resource[4] >= 1 and resource[3] >= 2 and resource[4] > remove_resource[4]\
                                     and resource[3] > remove_resource[3] and brd_un[cell_y][cell_x] == 0:
                                 unit.update(x, y, 10)
@@ -914,15 +914,15 @@ if __name__ == '__main__':
                                 remove_resource[3] += 2
                             elif d == 500 and resource[4] >= 2 and resource[3] >= 2\
                                     and resource[4] > remove_resource[4] + 1 and resource[3] >= remove_resource[3]\
-                                    and brd[cell_y + 1][cell_x] in [2, 1, '--', '-|', 1000, 2000] and\
-                                    brd[cell_y][cell_x + 1] in [2, 1, '--', '-|', 1000, 2000]\
-                                    and brd[cell_y + 1][cell_x + 1] in [2, 1, '--', '-|', 1000, 2000]:
+                                    and brd[cell_y + 1][cell_x] in [2, 1, '--', '-|', 1000, 2000, 111, 112] and\
+                                    brd[cell_y][cell_x + 1] in [2, 1, '--', '-|', 1000, 2000, 111, 112]\
+                                    and brd[cell_y + 1][cell_x + 1] in [2, 1, '--', '-|', 1000, 2000, 111, 112]:
                                 brd[cell_y][cell_x], brd[cell_y + 1][cell_x + 1], brd[cell_y + 1][cell_x],\
                                 brd[cell_y][cell_x + 1] = 500, '-', '-', '-'
                                 for i in range(10):
                                     for j in range(10):
                                         if brd[cell_y - 4 + i][cell_x - 4 + j] == 2:
-                                            brd[cell_y - 4 + i][cell_x - 4 + j] = 1
+                                            brd[cell_y - 4 + i][cell_x - 4 + j] = 111 + step_of_person
                                 remove_resource[4] += 2
                                 remove_resource[3] += 2
                         unit.render()
