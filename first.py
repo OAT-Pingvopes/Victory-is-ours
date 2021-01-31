@@ -33,7 +33,7 @@ FONT = pygame.font.Font(None, 32)
 sock = socket.socket()
 host = ''
 port = 5050
-pygame.mixer.music.load('data/Егор Летов - Моя оборона.mp3')
+pygame.mixer.music.load('data/Soviet.mp3')
 pygame.mixer.music.set_volume(0.1)
 pygame.mixer.music.play(-1)
 
@@ -636,9 +636,9 @@ class Unit(pygame.sprite.Sprite):
         cell_x = (x - self.left) // self.cell_size
         cell_y = (y - self.top) // self.cell_size
         if step_of_person == 0 and self.board_un[cell_y][cell_x] == 0:
-            self.board_un[cell_y][cell_x] = int(str(n) + '0')
+            self.board_un[cell_y][cell_x] = [int(str(n) + '0'), 1]
         elif step_of_person == 1 and self.board_un[cell_y][cell_x] == 0:
-            self.board_un[cell_y][cell_x] = int(str(n) + '1')
+            self.board_un[cell_y][cell_x] = [int(str(n) + '1'), 1]
 
     def get_board(self):
         return self.board_un
@@ -658,7 +658,10 @@ class Unit(pygame.sprite.Sprite):
         for y in range(35):
             for x in range(62):
                 position = (x * self.cell_size + self.left, y * self.cell_size + self.top)
-                number_of_unit = str(self.board_un[y][x])
+                if self.board_un[y][x] == 0:
+                    number_of_unit = '000'
+                else:
+                    number_of_unit = str(self.board_un[y][x][0])
                 if int(number_of_unit[0:2]) == 40 and int(number_of_unit[2]) == 0:
                     field_image = load_image('moto_brigada_blue.png')
                     field = pygame.sprite.Sprite(units_sprites)
@@ -836,8 +839,9 @@ if __name__ == '__main__':
                         elif step_of_person == 1 and brd[cell_y][cell_x] in [1000, '--']:
                             b = 1
                         if 2 >= cell_y - pos_y >= -2 and 2 >= cell_x - pos_x >= -2 and brd[cell_y][cell_x] == 2\
-                                and str(brd_un[pos_y][pos_x])[-1] != str(step_of_person):
-                            brd_un[cell_y][cell_x] = brd_un[pos_y][pos_x]
+                                and str(brd_un[pos_y][pos_x][0])[-1] == str(step_of_person) and\
+                                brd_un[pos_y][pos_x][-1] == 1:
+                            brd_un[cell_y][cell_x] = [brd_un[pos_y][pos_x][0], 0]
                             brd_un[pos_y][pos_x] = 0
                             unit.update_board(brd_un)
                             for sprite in units_sprites:
@@ -930,6 +934,12 @@ if __name__ == '__main__':
                 if step.pressed(event.pos):
                     for x in resource.keys():
                         resource[x] -= remove_resource[x]
+                    for y in brd_un:
+                        for z in y:
+                            if z != 0:
+                                if z[-1] == 0:
+                                    z[-1] = 1
+                    unit.update_board(brd_un)
                     if step_of_person == 0:
                         step_of_person = 1
                         resource = red.res()
@@ -955,9 +965,9 @@ if __name__ == '__main__':
         else:
             screen.blit(font2.render('Xод красных', True, (255, 0, 0)), (1700, 0))
         if b == 0:
-            screen.fill('red')
-        elif b == 1:
             screen.fill('blue')
+        elif b == 1:
+            screen.fill('red')
         board.render()
         builds_sprites.draw(screen)
         units_sprites.draw(screen)
