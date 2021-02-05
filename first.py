@@ -851,7 +851,8 @@ if __name__ == '__main__':
                                         sprite.rect.x == cell_x * 30 + 60 and sprite.rect.y == cell_y * 30 + 30:
                                     sprite.kill()
                             position = (-30, -30)
-                    if brd[cell_y][cell_x] in [1, 2, 111, 112, 3, 4, 5, 6]:
+                    if brd[cell_y][cell_x] in [1, 2, 111, 112, 3, 4, 5, 6, 4000, 4001, 5001, 5000, 6000, 6001, 3000,
+                                               3001]:
                         # юниты
                         brd_un = unit.get_board()
                         if ((step_of_person == 0 and (5 >= cell_x - 12 >= -5 or 5 >= cell_x - 13 >= -5) and
@@ -893,29 +894,6 @@ if __name__ == '__main__':
                                 text_f = font.render(str(resource[4]), True, (255, 0, 0))
                                 text_i = font.render(str(resource[3]), True, (255, 0, 0))
                                 text_o = font.render(str(resource[5]), True, (255, 0, 0))
-                            # добыча ресурсов
-                            elif d == 100 and brd[cell_y][cell_x] == 4 and resource[4] > 0\
-                                    and resource[4] > remove_resource[4]:
-                                brd[cell_y][cell_x] = 100
-                                remove_resource[4] -= 3
-                                remove_resource[4] += 1
-                            elif d == 200 and brd[cell_y][cell_x] == 3 and resource[4] > 1\
-                                    and resource[4] > remove_resource[4] + 1 and resource[3] >= remove_resource[3]:
-                                brd[cell_y][cell_x] = 200
-                                remove_resource[3] -= 1
-                                remove_resource[4] += 1
-                            elif d == 400 and brd[cell_y][cell_x] == 6 and resource[3] >= 2 and resource[5] >= 1\
-                                    and resource[3] >= remove_resource[3] and resource[5] >= remove_resource[5]:
-                                brd[cell_y][cell_x] = 400
-                                remove_resource[6] -= 1
-                                remove_resource[3] += 2
-                                remove_resource[5] += 1
-                            elif d == 300 and brd[cell_y][cell_x] == 5 and resource[4] >= 2 and resource[3] >= 2\
-                                    and resource[4] > remove_resource[4] + 1 and resource[3] >= remove_resource[3]:
-                                brd[cell_y][cell_x] = 300
-                                remove_resource[5] -= 1
-                                remove_resource[4] += 2
-                                remove_resource[3] += 2
                             elif d == 500 and resource[4] >= 2 and resource[3] >= 2\
                                     and resource[4] > remove_resource[4] + 1 and resource[3] >= remove_resource[3]\
                                     and brd[cell_y + 1][cell_x] in [2, 1, '--', '-|', 1000, 2000, 111, 112] and\
@@ -927,6 +905,60 @@ if __name__ == '__main__':
                                     for j in range(10):
                                         if brd[cell_y - 4 + i][cell_x - 4 + j] == 2:
                                             brd[cell_y - 4 + i][cell_x - 4 + j] = 111 + step_of_person
+                                        elif brd[cell_y - 4 + i][cell_x - 4 + j] in [3, 4, 5, 6]:
+                                            brd[cell_y - 4 + i][cell_x - 4 + j] =\
+                                                int(str(brd[cell_y - 4 + i][cell_x - 4 + j]) +
+                                                    '00' + str(step_of_person))
+                                remove_resource[4] += 2
+                                remove_resource[3] += 2
+                            elif d == 100 and int(str(brd[cell_y][cell_x])[0]) == 4 and resource[4] > 0\
+                                    and resource[4] > remove_resource[4]:
+                                brd[cell_y][cell_x] = 100
+                                remove_resource[4] -= 3
+                                remove_resource[4] += 1
+                            elif d == 200 and int(str(brd[cell_y][cell_x])[0]) == 3 and resource[4] > 1\
+                                    and resource[4] > remove_resource[4] + 1 and resource[3] >= remove_resource[3]:
+                                brd[cell_y][cell_x] = 200
+                                remove_resource[3] -= 1
+                                remove_resource[4] += 1
+                            elif d == 400 and int(str(brd[cell_y][cell_x])[0]) == 6 and resource[3] >= 2 and\
+                                    resource[5] >= 1 and resource[3] >= remove_resource[3] and\
+                                    resource[5] >= remove_resource[5]:
+                                brd[cell_y][cell_x] = 400
+                                remove_resource[6] -= 1
+                                remove_resource[3] += 2
+                                remove_resource[5] += 1
+                            elif d == 300 and int(str(brd[cell_y][cell_x])[0]) == 5 and resource[4] >= 2 and\
+                                    resource[3] >= 2 and resource[4] > remove_resource[4] + 1 and\
+                                    resource[3] >= remove_resource[3]:
+                                brd[cell_y][cell_x] = 300
+                                remove_resource[5] -= 1
+                                remove_resource[4] += 2
+                                remove_resource[3] += 2
+                            # добыча ресурсов
+                        if int(str(brd[cell_y][cell_x])[-1]) == step_of_person:
+                            if d == 100 and int(str(brd[cell_y][cell_x])[0]) == 4 and resource[4] > 0\
+                                    and resource[4] > remove_resource[4]:
+                                brd[cell_y][cell_x] = 100
+                                remove_resource[4] -= 3
+                                remove_resource[4] += 1
+                            elif d == 200 and int(str(brd[cell_y][cell_x])[0]) == 3 and resource[4] > 1\
+                                    and resource[4] > remove_resource[4] + 1 and resource[3] >= remove_resource[3]:
+                                brd[cell_y][cell_x] = 200
+                                remove_resource[3] -= 1
+                                remove_resource[4] += 1
+                            elif d == 400 and int(str(brd[cell_y][cell_x])[0]) == 6 and resource[3] >= 2 and\
+                                    resource[5] >= 1 and resource[3] >= remove_resource[3] and\
+                                    resource[5] >= remove_resource[5]:
+                                brd[cell_y][cell_x] = 400
+                                remove_resource[6] -= 1
+                                remove_resource[3] += 2
+                                remove_resource[5] += 1
+                            elif d == 300 and int(str(brd[cell_y][cell_x])[0]) == 5 and resource[4] >= 2 and\
+                                    resource[3] >= 2 and resource[4] > remove_resource[4] + 1 and\
+                                    resource[3] >= remove_resource[3]:
+                                brd[cell_y][cell_x] = 300
+                                remove_resource[5] -= 1
                                 remove_resource[4] += 2
                                 remove_resource[3] += 2
                         unit.render()
