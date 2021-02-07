@@ -783,6 +783,8 @@ if __name__ == '__main__':
     board.place_of_war()
     brd = board.get_board()
     unit = Unit()
+    unit.update_board([[0] * 62 for i in range(35)])
+    brd_un = unit.get_board()
     d = 0
     font = pygame.font.Font(None, 30)
     font2 = pygame.font.Font(None, 40)
