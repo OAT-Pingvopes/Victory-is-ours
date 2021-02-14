@@ -39,6 +39,7 @@ pygame.mixer.music.play(-1)
 
 
 class Red:
+    # подсчёт ресурсов красного игрока
     def __init__(self):
         # self.resource = {3: 0, 4: 1, 5: 0, 6: 0}
         self.resource = {3: 100, 4: 100, 5: 100, 6: 100}
@@ -48,6 +49,7 @@ class Red:
 
 
 class Blue:
+    # подсчёт ресурсов синего игрока
     def __init__(self):
         # self.resource = {3: 0, 4: 1, 5: 0, 6: 0}
         self.resource = {3: 100, 4: 100, 5: 100, 6: 100}
@@ -57,6 +59,7 @@ class Blue:
 
 
 def load_image(name, colorkey=None):
+    # загрузка изображений
     fullname = os.path.join('data', name)
     # если файл не существует, то выходим
     if not os.path.isfile(fullname):
@@ -362,11 +365,13 @@ class Board:
         self.board[16][49], self.board[16][50], self.board[17][49], self.board[17][50] = 2000, '-|', '-|', '-|'
 
     def load_saves(self):
+        # загрузка сохранений
         load_file = open('data/save.txt', mode='r').readlines()
         exec(load_file[0])
         self.place_of_war()
 
     def place_of_war(self):
+        # загрузка спрайтов для поля
         field_image = load_image("frame.png")
         field = pygame.sprite.Sprite(all_sprites)
         field.image = field_image
@@ -429,6 +434,7 @@ class Board:
         self.cell_size = cell_size
 
     def render(self):
+        # обновление позиций построек
         Artillery(units_sprites).update(30, self.top)
         Soldier(units_sprites).update(30, self.cell_size * 2 + self.top)
         Tank(units_sprites).update(30, self.cell_size * 4 + self.top)
@@ -482,6 +488,7 @@ class Board:
         self.board = board
 
     def menu(self):
+        # главное меню игры
         background = pygame.image.load('data/start_menu.png')
         reg = Button()
         ip_conn = Button()
@@ -554,6 +561,7 @@ class Board:
 
 
 class Build(pygame.sprite.Sprite):
+    # создание построек
     def __init__(self, *group):
         super().__init__(*group)
         self.left = 60
@@ -623,6 +631,7 @@ class OilPump(Build):
 
 
 class Unit(pygame.sprite.Sprite):
+    # создание юнитов
     def __init__(self, *group):
         # НЕОБХОДИМО вызвать конструктор родительского класса Sprite.
         # Это очень важно!!!
