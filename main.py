@@ -5,6 +5,8 @@ import socket
 from pygame.locals import *
 import pygame
 pygame.init()
+b = 2
+you = ''
 c = 0
 # 0 - вода
 # 1 - выделенная клетка
@@ -21,8 +23,8 @@ c = 0
 # 200 - рудник железа
 # 300 - нефтекачалка
 # 400 - рудник вольфрама
+# 500 - баррак
 step_of_person = 0
-mus = 0
 all_sprites = pygame.sprite.Group()
 units_sprites = pygame.sprite.Group()
 builds_sprites = pygame.sprite.Group()
@@ -32,20 +34,14 @@ FONT = pygame.font.Font(None, 32)
 sock = socket.socket()
 host = ''
 port = 5050
-if mus == 0:
-    pygame.mixer.music.load('data/Agression.mp3')
-    pygame.mixer.music.set_volume(0)
-    pygame.mixer.music.play()
-    if not pygame.mixer.music.get_busy():
-        mus = 1
-elif mus == 1:
-    pygame.mixer.music.load('data/Soviet.mp3')
-    pygame.mixer.music.set_volume(0)
-    pygame.mixer.music.play()
-    if not pygame.mixer.music.get_busy():
-        mus = 0
+client = None
+pygame.mixer.music.load('data/Soviet.mp3')
+pygame.mixer.music.set_volume(0.1)
+pygame.mixer.music.play(-1)
+
 
 class Red:
+    # подсчёт ресурсов красного игрока
     def __init__(self):
         # self.resource = {3: 0, 4: 1, 5: 0, 6: 0}
         self.resource = {3: 100, 4: 100, 5: 100, 6: 100}
@@ -55,6 +51,7 @@ class Red:
 
 
 class Blue:
+    # подсчёт ресурсов синего игрока
     def __init__(self):
         # self.resource = {3: 0, 4: 1, 5: 0, 6: 0}
         self.resource = {3: 100, 4: 100, 5: 100, 6: 100}
@@ -64,6 +61,7 @@ class Blue:
 
 
 def load_image(name, colorkey=None):
+    # загрузка изображений
     fullname = os.path.join('data', name)
     # если файл не существует, то выходим
     if not os.path.isfile(fullname):
@@ -365,13 +363,17 @@ class Board:
         self.left = 60
         self.top = 30
         self.cell_size = 30
+        self.board[16][12], self.board[16][13], self.board[17][12], self.board[17][13] = 1000, '--', '--', '--'
+        self.board[16][49], self.board[16][50], self.board[17][49], self.board[17][50] = 2000, '-|', '-|', '-|'
 
     def load_saves(self):
+        # загрузка сохранений
         load_file = open('data/save.txt', mode='r').readlines()
         exec(load_file[0])
         self.place_of_war()
 
     def place_of_war(self):
+        # загрузка спрайтов для поля
         field_image = load_image("frame.png")
         field = pygame.sprite.Sprite(all_sprites)
         field.image = field_image
@@ -380,6 +382,7 @@ class Board:
         for y in range(self.height):
             for x in range(self.width):
                 position = (x * self.cell_size + self.left, y * self.cell_size + self.top)
+                size = self.cell_size, self.cell_size
                 if self.board[y][x] == 2:
                     field_image = load_image("grass.png")
                     field = pygame.sprite.Sprite(all_sprites)
@@ -410,6 +413,18 @@ class Board:
                     field.image = field_image
                     field.rect = field.image.get_rect()
                     field.rect.x, field.rect.y = position[0], position[1]
+                elif self.board[y][x] == 1000:
+                    field_image = load_image("main_build_blue.png")
+                    field = pygame.sprite.Sprite(all_sprites)
+                    field.image = field_image
+                    field.rect = field.image.get_rect()
+                    field.rect.x, field.rect.y = position[0], position[1]
+                elif self.board[y][x] == 2000:
+                    field_image = load_image("main_build_red.png")
+                    field = pygame.sprite.Sprite(all_sprites)
+                    field.image = field_image
+                    field.rect = field.image.get_rect()
+                    field.rect.x, field.rect.y = position[0], position[1]
                 if y <= 10:
                     position = (30, y * 2 * self.cell_size + self.top)
                     size = self.cell_size, self.cell_size
@@ -421,6 +436,7 @@ class Board:
         self.cell_size = cell_size
 
     def render(self):
+        # обновление позиций построек
         Artillery(units_sprites).update(30, self.top)
         Soldier(units_sprites).update(30, self.cell_size * 2 + self.top)
         Tank(units_sprites).update(30, self.cell_size * 4 + self.top)
@@ -430,6 +446,7 @@ class Board:
         IronMine(builds_sprites).update(30, self.cell_size * 10 + self.top)
         OilPump(builds_sprites).update(30, self.cell_size * 12 + self.top)
         WolframMine(builds_sprites).update(30, self.cell_size * 14 + self.top)
+        Barrak(builds_sprites).update(0, self.cell_size * 16 + self.top)
         for y in range(self.height):
             for x in range(self.width):
                 position = (x * self.cell_size + self.left, y * self.cell_size + self.top)
@@ -443,6 +460,8 @@ class Board:
                     OilPump(units_sprites).update(position[0], position[1])
                 elif self.board[y][x] == 400:
                     WolframMine(units_sprites).update(position[0], position[1])
+                elif self.board[y][x] == 500:
+                    Barrak(units_sprites).update(position[0], position[1])
         step.create_button(screen, (34, 139, 34), 1700, 1010, 200, 50, 100, 'Закончить ход', (255, 255, 255))
 
     def on_click(self, cell):
@@ -456,15 +475,8 @@ class Board:
         for x in range(len(self.board)):
             for y in range(len(self.board[x])):
                 if x == cell_y and y == cell_x:
-                    if self.board[x][y] == 1:
-                        self.board[x][y] = 2
-                    elif self.board[x][y] == 0:
+                    if self.board[x][y] == 0:
                         self.board[x][y] = 0
-                    else:
-                        for i in range(len(self.board)):
-                            for j in range(len(self.board[x])):
-                                if self.board[i][j] == 1:
-                                    self.board[i][j] = 2
         return cell_x, cell_y
 
     def get_click(self, mouse_pos):
@@ -478,6 +490,7 @@ class Board:
         self.board = board
 
     def menu(self):
+        # главное меню игры
         background = pygame.image.load('data/start_menu.png')
         reg = Button()
         ip_conn = Button()
@@ -502,7 +515,10 @@ class Board:
                         sock.bind((host, port))
                         sock.listen(1)
                         conn, addr = sock.accept()
+                        conn.send((f'brd = {self.board}').encode('utf-8'))
+                        client = conn
                         show = False
+                        you = 'server'
                         self.b = 1
                     elif save.pressed(event.pos) and self.b == 1:
                         file = open('data/save.txt', 'w')
@@ -517,6 +533,7 @@ class Board:
                     if ip_conn.pressed(event.pos):
                         try:
                             self.b, show = ip.connect_to()
+                            you = 'client'
                         except:
                             continue
 
@@ -549,6 +566,7 @@ class Board:
 
 
 class Build(pygame.sprite.Sprite):
+    # создание построек
     def __init__(self, *group):
         super().__init__(*group)
         self.left = 60
@@ -568,6 +586,17 @@ class Forester(Build):
     def __init__(self, *group):
         super().__init__(*group)
         self.image = Forester.image
+        self.rect = self.image.get_rect()
+        self.rect.x = -30
+        self.rect.y = -30
+
+
+class Barrak(Build):
+    image = load_image('barracks.png')
+
+    def __init__(self, *group):
+        super().__init__(*group)
+        self.image = Barrak.image
         self.rect = self.image.get_rect()
         self.rect.x = -30
         self.rect.y = -30
@@ -607,6 +636,7 @@ class OilPump(Build):
 
 
 class Unit(pygame.sprite.Sprite):
+    # создание юнитов
     def __init__(self, *group):
         # НЕОБХОДИМО вызвать конструктор родительского класса Sprite.
         # Это очень важно!!!
@@ -620,18 +650,32 @@ class Unit(pygame.sprite.Sprite):
         cell_x = (x - self.left) // self.cell_size
         cell_y = (y - self.top) // self.cell_size
         if step_of_person == 0 and self.board_un[cell_y][cell_x] == 0:
-            self.board_un[cell_y][cell_x] = int(str(n) + '0')
+            self.board_un[cell_y][cell_x] = [int(str(n) + '0'), 1]
         elif step_of_person == 1 and self.board_un[cell_y][cell_x] == 0:
-            self.board_un[cell_y][cell_x] = int(str(n) + '1')
+            self.board_un[cell_y][cell_x] = [int(str(n) + '1'), 1]
 
     def get_board(self):
         return self.board_un
+
+    def select(self, x, y):
+        cell_x = (x - self.left) // self.cell_size
+        cell_y = (y - self.top) // self.cell_size
+        if self.board_un[cell_y][cell_x] != 0:
+            return (x, y)
+        else:
+            return (-30, -30)
+
+    def update_board(self, brd_un):
+        self.board_un = brd_un
 
     def render(self):
         for y in range(35):
             for x in range(62):
                 position = (x * self.cell_size + self.left, y * self.cell_size + self.top)
-                number_of_unit = str(self.board_un[y][x])
+                if self.board_un[y][x] == 0:
+                    number_of_unit = '000'
+                else:
+                    number_of_unit = str(self.board_un[y][x][0])
                 if int(number_of_unit[0:2]) == 40 and int(number_of_unit[2]) == 0:
                     field_image = load_image('moto_brigada_blue.png')
                     field = pygame.sprite.Sprite(units_sprites)
@@ -683,7 +727,7 @@ class Unit(pygame.sprite.Sprite):
 
 
 class Soldier(Unit):
-    image = load_image('Sprite_Of_Brigada.png')
+    image = load_image('Sprite Of Brigada.png')
 
     def __init__(self, *group):
         # НЕОБХОДИМО вызвать конструктор родительского класса Sprite.
@@ -742,6 +786,11 @@ if __name__ == '__main__':
     screen = pygame.display.set_mode((1920, 1080))
     board = Board(62, 35)
     board.menu()
+    brd = None
+    if you == 'client':
+        data = sock.recv(10240)
+        exec(data)
+    board.update_board(brd)
     board.set_view(60, 30, 30)
     running = True
     soldat = Soldier(units_sprites)
@@ -751,10 +800,13 @@ if __name__ == '__main__':
     blue = Blue()
     red = Red()
     board.place_of_war()
-    brd = board.get_board()
     unit = Unit()
+    unit.update_board([[0] * 62 for i in range(35)])
+    brd_un = unit.get_board()
     d = 0
     font = pygame.font.Font(None, 30)
+    font2 = pygame.font.Font(None, 40)
+    position = (-30, -30)
     if step_of_person == 0:
         resource = blue.res()
     else:
@@ -789,73 +841,157 @@ if __name__ == '__main__':
                         d = 300
                     if 450 <= y <= 480 and 30 <= x <= 60:
                         d = 400
+                    if 510 <= y <= 540 and 30 <= x <= 60:
+                        d = 500
+                    if x >= 60 and y >= 30:
+                        cell_x = (x - 60) // 30
+                        cell_y = (y - 30) // 30
+                        position = unit.select(cell_x * 30 + 60, cell_y * 30 + 30)
+                        d = 0
                 if event.button == 3:
                     cell_x = (x - 60) // 30
                     cell_y = (y - 30) // 30
-                    if brd[cell_y][cell_x] in [1, 2, 3, 4, 5, 6]:
+                    if position != (-30, -30):
+                        brd_un = unit.get_board()
+                        pos_x, pos_y = (position[0] - 60) // 30, (position[1] - 30) // 30
+                        if step_of_person == 0 and brd[cell_y][cell_x] in [2000, '-|']:
+                            b = 0
+                        elif step_of_person == 1 and brd[cell_y][cell_x] in [1000, '--']:
+                            b = 1
+                        if 2 >= cell_y - pos_y >= -2 and 2 >= cell_x - pos_x >= -2 and brd[cell_y][cell_x] == 2\
+                                and str(brd_un[pos_y][pos_x][0])[-1] == str(step_of_person) and\
+                                brd_un[pos_y][pos_x][-1] == 1:
+                            brd_un[cell_y][cell_x] = [brd_un[pos_y][pos_x][0], 0]
+                            brd_un[pos_y][pos_x] = 0
+                            unit.update_board(brd_un)
+                            for sprite in units_sprites:
+                                if sprite.rect.x == position[0] and sprite.rect.y == position[1]:
+                                    sprite.kill()
+                                if str(brd_un[cell_y][cell_x])[-1] == str(step_of_person) and\
+                                        sprite.rect.x == cell_x * 30 + 60 and sprite.rect.y == cell_y * 30 + 30:
+                                    sprite.kill()
+                            position = (-30, -30)
+                    if brd[cell_y][cell_x] in [1, 2, 111, 112, 3, 4, 5, 6, 4000, 4001, 5001, 5000, 6000, 6001, 3000,
+                                               3001]:
                         # юниты
                         brd_un = unit.get_board()
-                        if d == 10 and resource[4] >= 1 and resource[3] >= 2 and resource[4] > remove_resource[4]\
-                                and resource[3] > remove_resource[3] and brd_un[cell_y][cell_x] == 0:
-                            unit.update(x, y, 10)
-                            resource[4] -= 1
-                            resource[3] -= 2
-                            text_f = font.render(str(resource[4]), True, (255, 0, 0))
-                            text_i = font.render(str(resource[3]), True, (255, 0, 0))
-                        elif d == 20 and resource[4] >= 1 and resource[3] >= 1 and resource[4] > remove_resource[4] \
-                                and resource[3] > remove_resource[3] and brd_un[cell_y][cell_x] == 0:
-                            unit.update(x, y, 20)
-                            resource[4] -= 1
-                            resource[3] -= 1
-                            text_f = font.render(str(resource[4]), True, (255, 0, 0))
-                            text_i = font.render(str(resource[3]), True, (255, 0, 0))
-                        elif d == 30 and resource[3] >= 3 and resource[5] >= 1 and resource[6] >= 1 \
-                                and resource[3] > remove_resource[3] and resource[5] > remove_resource[5] \
-                                and resource[6] > remove_resource[6] and brd_un[cell_y][cell_x] == 0:
-                            unit.update(x, y, 30)
-                            resource[3] -= 3
-                            resource[5] -= 1
-                            resource[6] -= 1
-                            text_i = font.render(str(resource[3]), True, (255, 0, 0))
-                            text_o = font.render(str(resource[5]), True, (255, 0, 0))
-                            text_w = font.render(str(resource[6]), True, (255, 0, 0))
-                        elif d == 40 and resource[3] >= 2 and resource[4] > 1 and resource[5] >= 1\
-                                and resource[3] > remove_resource[3] and resource[5] > remove_resource[5] \
-                                and resource[4] > remove_resource[4] and brd_un[cell_y][cell_x] == 0:
-                            unit.update(x, y, 40)
-                            resource[4] -= 1
-                            resource[3] -= 2
-                            resource[5] -= 1
-                            text_f = font.render(str(resource[4]), True, (255, 0, 0))
-                            text_i = font.render(str(resource[3]), True, (255, 0, 0))
-                            text_o = font.render(str(resource[5]), True, (255, 0, 0))
-                        # добыча ресурсов
-                        elif d == 100 and brd[cell_y][cell_x] == 4 and resource[4] > 0\
-                                and resource[4] > remove_resource[4]:
-                            brd[cell_y][cell_x] = 100
-                            remove_resource[4] -= 2
-                        elif d == 200 and brd[cell_y][cell_x] == 3 and resource[4] > 1\
-                                and resource[4] > remove_resource[4] + 1 and resource[3] >= remove_resource[3]:
-                            brd[cell_y][cell_x] = 200
-                            remove_resource[3] -= 1
-                            remove_resource[4] += 1
-                        elif d == 400 and brd[cell_y][cell_x] == 6 and resource[3] >= 2 and resource[5] >= 1\
-                                and resource[3] >= remove_resource[3] and resource[5] >= remove_resource[5]:
-                            brd[cell_y][cell_x] = 400
-                            remove_resource[6] -= 1
-                            remove_resource[3] += 2
-                            remove_resource[5] += 1
-                        elif d == 300 and brd[cell_y][cell_x] == 5 and resource[4] >= 2 and resource[3] >= 2\
-                                and resource[4] > remove_resource[4] + 1 and resource[3] >= remove_resource[3]:
-                            brd[cell_y][cell_x] = 300
-                            remove_resource[5] -= 1
-                            remove_resource[4] += 2
-                            remove_resource[3] += 2
+                        if ((step_of_person == 0 and (5 >= cell_x - 12 >= -5 or 5 >= cell_x - 13 >= -5) and
+                             (5 >= cell_y - 17 >= -5 or 5 >= cell_y - 16 >= -5)) or
+                            (step_of_person == 1 and (5 >= cell_x - 49 >= -5 or 5 >= cell_x - 50 >= -5))
+                                and (5 >= cell_y - 17 >= -5 or 5 >= cell_y - 16 >= -5))\
+                                or brd[cell_y][cell_x] == step_of_person + 111:
+                            if d == 10 and resource[4] >= 1 and resource[3] >= 2 and resource[4] > remove_resource[4]\
+                                    and resource[3] > remove_resource[3] and brd_un[cell_y][cell_x] == 0:
+                                unit.update(x, y, 10)
+                                resource[4] -= 1
+                                resource[3] -= 2
+                                text_f = font.render(str(resource[4]), True, (255, 0, 0))
+                                text_i = font.render(str(resource[3]), True, (255, 0, 0))
+                            elif d == 20 and resource[4] >= 1 and resource[3] >= 1 and resource[4] > remove_resource[4]\
+                                    and resource[3] > remove_resource[3] and brd_un[cell_y][cell_x] == 0:
+                                unit.update(x, y, 20)
+                                resource[4] -= 1
+                                resource[3] -= 1
+                                text_f = font.render(str(resource[4]), True, (255, 0, 0))
+                                text_i = font.render(str(resource[3]), True, (255, 0, 0))
+                            elif d == 30 and resource[3] >= 3 and resource[5] >= 1 and resource[6] >= 1 \
+                                    and resource[3] > remove_resource[3] and resource[5] > remove_resource[5] \
+                                    and resource[6] > remove_resource[6] and brd_un[cell_y][cell_x] == 0:
+                                unit.update(x, y, 30)
+                                resource[3] -= 3
+                                resource[5] -= 1
+                                resource[6] -= 1
+                                text_i = font.render(str(resource[3]), True, (255, 0, 0))
+                                text_o = font.render(str(resource[5]), True, (255, 0, 0))
+                                text_w = font.render(str(resource[6]), True, (255, 0, 0))
+                            elif d == 40 and resource[3] >= 2 and resource[4] > 1 and resource[5] >= 1\
+                                    and resource[3] > remove_resource[3] and resource[5] > remove_resource[5] \
+                                    and resource[4] > remove_resource[4] and brd_un[cell_y][cell_x] == 0:
+                                unit.update(x, y, 40)
+                                resource[4] -= 1
+                                resource[3] -= 2
+                                resource[5] -= 1
+                                text_f = font.render(str(resource[4]), True, (255, 0, 0))
+                                text_i = font.render(str(resource[3]), True, (255, 0, 0))
+                                text_o = font.render(str(resource[5]), True, (255, 0, 0))
+                            elif d == 500 and resource[4] >= 2 and resource[3] >= 2\
+                                    and resource[4] > remove_resource[4] + 1 and resource[3] >= remove_resource[3]\
+                                    and brd[cell_y + 1][cell_x] in [2, 1, '--', '-|', 1000, 2000, 111, 112] and\
+                                    brd[cell_y][cell_x + 1] in [2, 1, '--', '-|', 1000, 2000, 111, 112]\
+                                    and brd[cell_y + 1][cell_x + 1] in [2, 1, '--', '-|', 1000, 2000, 111, 112]:
+                                brd[cell_y][cell_x], brd[cell_y + 1][cell_x + 1], brd[cell_y + 1][cell_x],\
+                                brd[cell_y][cell_x + 1] = 500, '-', '-', '-'
+                                for i in range(10):
+                                    for j in range(10):
+                                        if brd[cell_y - 4 + i][cell_x - 4 + j] == 2:
+                                            brd[cell_y - 4 + i][cell_x - 4 + j] = 111 + step_of_person
+                                        elif brd[cell_y - 4 + i][cell_x - 4 + j] in [3, 4, 5, 6]:
+                                            brd[cell_y - 4 + i][cell_x - 4 + j] =\
+                                                int(str(brd[cell_y - 4 + i][cell_x - 4 + j]) +
+                                                    '00' + str(step_of_person))
+                                remove_resource[4] += 2
+                                remove_resource[3] += 2
+                            elif d == 100 and int(str(brd[cell_y][cell_x])[0]) == 4 and resource[4] > 0\
+                                    and resource[4] > remove_resource[4]:
+                                brd[cell_y][cell_x] = 100
+                                remove_resource[4] -= 3
+                                remove_resource[4] += 1
+                            elif d == 200 and int(str(brd[cell_y][cell_x])[0]) == 3 and resource[4] > 1\
+                                    and resource[4] > remove_resource[4] + 1 and resource[3] >= remove_resource[3]:
+                                brd[cell_y][cell_x] = 200
+                                remove_resource[3] -= 1
+                                remove_resource[4] += 1
+                            elif d == 400 and int(str(brd[cell_y][cell_x])[0]) == 6 and resource[3] >= 2 and\
+                                    resource[5] >= 1 and resource[3] >= remove_resource[3] and\
+                                    resource[5] >= remove_resource[5]:
+                                brd[cell_y][cell_x] = 400
+                                remove_resource[6] -= 1
+                                remove_resource[3] += 2
+                                remove_resource[5] += 1
+                            elif d == 300 and int(str(brd[cell_y][cell_x])[0]) == 5 and resource[4] >= 2 and\
+                                    resource[3] >= 2 and resource[4] > remove_resource[4] + 1 and\
+                                    resource[3] >= remove_resource[3]:
+                                brd[cell_y][cell_x] = 300
+                                remove_resource[5] -= 1
+                                remove_resource[4] += 2
+                                remove_resource[3] += 2
+                            # добыча ресурсов
+                        if int(str(brd[cell_y][cell_x])[-1]) == step_of_person:
+                            if d == 100 and int(str(brd[cell_y][cell_x])[0]) == 4 and resource[4] > 0\
+                                    and resource[4] > remove_resource[4]:
+                                brd[cell_y][cell_x] = 100
+                                remove_resource[4] -= 3
+                                remove_resource[4] += 1
+                            elif d == 200 and int(str(brd[cell_y][cell_x])[0]) == 3 and resource[4] > 1\
+                                    and resource[4] > remove_resource[4] + 1 and resource[3] >= remove_resource[3]:
+                                brd[cell_y][cell_x] = 200
+                                remove_resource[3] -= 1
+                                remove_resource[4] += 1
+                            elif d == 400 and int(str(brd[cell_y][cell_x])[0]) == 6 and resource[3] >= 2 and\
+                                    resource[5] >= 1 and resource[3] >= remove_resource[3] and\
+                                    resource[5] >= remove_resource[5]:
+                                brd[cell_y][cell_x] = 400
+                                remove_resource[6] -= 1
+                                remove_resource[3] += 2
+                                remove_resource[5] += 1
+                            elif d == 300 and int(str(brd[cell_y][cell_x])[0]) == 5 and resource[4] >= 2 and\
+                                    resource[3] >= 2 and resource[4] > remove_resource[4] + 1 and\
+                                    resource[3] >= remove_resource[3]:
+                                brd[cell_y][cell_x] = 300
+                                remove_resource[5] -= 1
+                                remove_resource[4] += 2
+                                remove_resource[3] += 2
                         unit.render()
                         board.update_board(brd)
                 if step.pressed(event.pos):
                     for x in resource.keys():
                         resource[x] -= remove_resource[x]
+                    for y in brd_un:
+                        for z in y:
+                            if z != 0:
+                                if z[-1] == 0:
+                                    z[-1] = 1
+                    unit.update_board(brd_un)
                     if step_of_person == 0:
                         step_of_person = 1
                         resource = red.res()
@@ -870,18 +1006,27 @@ if __name__ == '__main__':
             elif event.type == KEYDOWN:
                 if event.key == K_ESCAPE:
                     board.menu()
-        screen.fill((42, 92, 3))
         pygame.draw.rect(screen, (10, 96, 150), (60, 30, 1860, 1050))
         screen.blit(text_f, (60, 270))
         screen.blit(text_i, (60, 330))
         screen.blit(text_o, (60, 390))
         screen.blit(text_w, (60, 450))
         all_sprites.draw(screen)
+        if step_of_person == 0:
+            screen.blit(font2.render('Xод синих', True, (0, 0, 255)), (1700, 0))
+            if you == 'server':
+                new = board.get_board()
+                client.send()
+        else:
+            screen.blit(font2.render('Xод красных', True, (255, 0, 0)), (1700, 0))
+        if b == 0:
+            screen.fill('blue')
+        elif b == 1:
+            screen.fill('red')
         board.render()
         builds_sprites.draw(screen)
         units_sprites.draw(screen)
+        pygame.draw.rect(screen, 'white', (position, (30, 30)), 2)
         pygame.display.flip()
         clock.tick(60)
     pygame.quit()
-
-# рабочий МП

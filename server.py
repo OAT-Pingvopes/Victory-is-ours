@@ -8,7 +8,5 @@ sock.listen(1)
 conn, addr = sock.accept()
 
 print('connected:', addr)
-
-while True:
-    data = conn.recv(10240)
-    print(data.decode('utf-8'))
+data = '7865'
+conn.send(data.encode('utf-8'))
