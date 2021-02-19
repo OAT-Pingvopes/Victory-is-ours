@@ -536,12 +536,6 @@ class Board:
                         try:
                             self.b, show = ip.connect_to()
                             you = 'client'
-                            brd = None
-                            f = sock.recv(10240)
-                            exec(f.decode('utf-8'))
-                            print(brd)
-                            self.board = brd
-                            self.place_of_war()
                         except:
                             continue
                 elif event.type == KEYDOWN:
@@ -793,6 +787,14 @@ if __name__ == '__main__':
     screen = pygame.display.set_mode((1920, 1080))
     board = Board(62, 35)
     board.menu()
+    brd = None
+    if you == 'client':
+        f = sock.recv(10240)
+        exec(f.decode('utf-8'))
+        board.update_board(brd)
+        board.place_of_war()
+    else:
+        brd = board.get_board()
     board.set_view(60, 30, 30)
     running = True
     soldat = Soldier(units_sprites)
@@ -802,7 +804,6 @@ if __name__ == '__main__':
     blue = Blue()
     red = Red()
     board.place_of_war()
-    brd = board.get_board()
     unit = Unit()
     unit.update_board([[0] * 62 for i in range(35)])
     brd_un = unit.get_board()
@@ -861,8 +862,8 @@ if __name__ == '__main__':
                             b = 0
                         elif step_of_person == 1 and brd[cell_y][cell_x] in [1000, '--']:
                             b = 1
-                        if 2 >= cell_y - pos_y >= -2 and 2 >= cell_x - pos_x >= -2 and brd[cell_y][cell_x] == 2\
-                                and str(brd_un[pos_y][pos_x][0])[-1] == str(step_of_person) and\
+                        if 2 >= cell_y - pos_y >= -2 and 2 >= cell_x - pos_x >= -2 and brd[cell_y][cell_x] == 2 \
+                                and str(brd_un[pos_y][pos_x][0])[-1] == str(step_of_person) and \
                                 brd_un[pos_y][pos_x][-1] == 1:
                             brd_un[cell_y][cell_x] = [brd_un[pos_y][pos_x][0], 0]
                             brd_un[pos_y][pos_x] = 0
@@ -870,7 +871,7 @@ if __name__ == '__main__':
                             for sprite in units_sprites:
                                 if sprite.rect.x == position[0] and sprite.rect.y == position[1]:
                                     sprite.kill()
-                                if str(brd_un[cell_y][cell_x])[-1] == str(step_of_person) and\
+                                if str(brd_un[cell_y][cell_x])[-1] == str(step_of_person) and \
                                         sprite.rect.x == cell_x * 30 + 60 and sprite.rect.y == cell_y * 30 + 30:
                                     sprite.kill()
                             position = (-30, -30)
@@ -881,16 +882,16 @@ if __name__ == '__main__':
                         if ((step_of_person == 0 and (5 >= cell_x - 12 >= -5 or 5 >= cell_x - 13 >= -5) and
                              (5 >= cell_y - 17 >= -5 or 5 >= cell_y - 16 >= -5)) or
                             (step_of_person == 1 and (5 >= cell_x - 49 >= -5 or 5 >= cell_x - 50 >= -5))
-                                and (5 >= cell_y - 17 >= -5 or 5 >= cell_y - 16 >= -5))\
+                            and (5 >= cell_y - 17 >= -5 or 5 >= cell_y - 16 >= -5)) \
                                 or brd[cell_y][cell_x] == step_of_person + 111:
-                            if d == 10 and resource[4] >= 1 and resource[3] >= 2 and resource[4] > remove_resource[4]\
+                            if d == 10 and resource[4] >= 1 and resource[3] >= 2 and resource[4] > remove_resource[4] \
                                     and resource[3] > remove_resource[3] and brd_un[cell_y][cell_x] == 0:
                                 unit.update(x, y, 10)
                                 resource[4] -= 1
                                 resource[3] -= 2
                                 text_f = font.render(str(resource[4]), True, (255, 0, 0))
                                 text_i = font.render(str(resource[3]), True, (255, 0, 0))
-                            elif d == 20 and resource[4] >= 1 and resource[3] >= 1 and resource[4] > remove_resource[4]\
+                            elif d == 20 and resource[4] >= 1 and resource[3] >= 1 and resource[4] > remove_resource[4] \
                                     and resource[3] > remove_resource[3] and brd_un[cell_y][cell_x] == 0:
                                 unit.update(x, y, 20)
                                 resource[4] -= 1
@@ -907,7 +908,7 @@ if __name__ == '__main__':
                                 text_i = font.render(str(resource[3]), True, (255, 0, 0))
                                 text_o = font.render(str(resource[5]), True, (255, 0, 0))
                                 text_w = font.render(str(resource[6]), True, (255, 0, 0))
-                            elif d == 40 and resource[3] >= 2 and resource[4] > 1 and resource[5] >= 1\
+                            elif d == 40 and resource[3] >= 2 and resource[4] > 1 and resource[5] >= 1 \
                                     and resource[3] > remove_resource[3] and resource[5] > remove_resource[5] \
                                     and resource[4] > remove_resource[4] and brd_un[cell_y][cell_x] == 0:
                                 unit.update(x, y, 40)
@@ -917,42 +918,42 @@ if __name__ == '__main__':
                                 text_f = font.render(str(resource[4]), True, (255, 0, 0))
                                 text_i = font.render(str(resource[3]), True, (255, 0, 0))
                                 text_o = font.render(str(resource[5]), True, (255, 0, 0))
-                            elif d == 500 and resource[4] >= 2 and resource[3] >= 2\
-                                    and resource[4] > remove_resource[4] + 1 and resource[3] >= remove_resource[3]\
-                                    and brd[cell_y + 1][cell_x] in [2, 1, '--', '-|', 1000, 2000, 111, 112] and\
-                                    brd[cell_y][cell_x + 1] in [2, 1, '--', '-|', 1000, 2000, 111, 112]\
+                            elif d == 500 and resource[4] >= 2 and resource[3] >= 2 \
+                                    and resource[4] > remove_resource[4] + 1 and resource[3] >= remove_resource[3] \
+                                    and brd[cell_y + 1][cell_x] in [2, 1, '--', '-|', 1000, 2000, 111, 112] and \
+                                    brd[cell_y][cell_x + 1] in [2, 1, '--', '-|', 1000, 2000, 111, 112] \
                                     and brd[cell_y + 1][cell_x + 1] in [2, 1, '--', '-|', 1000, 2000, 111, 112]:
-                                brd[cell_y][cell_x], brd[cell_y + 1][cell_x + 1], brd[cell_y + 1][cell_x],\
+                                brd[cell_y][cell_x], brd[cell_y + 1][cell_x + 1], brd[cell_y + 1][cell_x], \
                                 brd[cell_y][cell_x + 1] = 500, '-', '-', '-'
                                 for i in range(10):
                                     for j in range(10):
                                         if brd[cell_y - 4 + i][cell_x - 4 + j] == 2:
                                             brd[cell_y - 4 + i][cell_x - 4 + j] = 111 + step_of_person
                                         elif brd[cell_y - 4 + i][cell_x - 4 + j] in [3, 4, 5, 6]:
-                                            brd[cell_y - 4 + i][cell_x - 4 + j] =\
+                                            brd[cell_y - 4 + i][cell_x - 4 + j] = \
                                                 int(str(brd[cell_y - 4 + i][cell_x - 4 + j]) +
                                                     '00' + str(step_of_person))
                                 remove_resource[4] += 2
                                 remove_resource[3] += 2
-                            elif d == 100 and int(str(brd[cell_y][cell_x])[0]) == 4 and resource[4] > 0\
+                            elif d == 100 and int(str(brd[cell_y][cell_x])[0]) == 4 and resource[4] > 0 \
                                     and resource[4] > remove_resource[4]:
                                 brd[cell_y][cell_x] = 100
                                 remove_resource[4] -= 3
                                 remove_resource[4] += 1
-                            elif d == 200 and int(str(brd[cell_y][cell_x])[0]) == 3 and resource[4] > 1\
+                            elif d == 200 and int(str(brd[cell_y][cell_x])[0]) == 3 and resource[4] > 1 \
                                     and resource[4] > remove_resource[4] + 1 and resource[3] >= remove_resource[3]:
                                 brd[cell_y][cell_x] = 200
                                 remove_resource[3] -= 1
                                 remove_resource[4] += 1
-                            elif d == 400 and int(str(brd[cell_y][cell_x])[0]) == 6 and resource[3] >= 2 and\
-                                    resource[5] >= 1 and resource[3] >= remove_resource[3] and\
+                            elif d == 400 and int(str(brd[cell_y][cell_x])[0]) == 6 and resource[3] >= 2 and \
+                                    resource[5] >= 1 and resource[3] >= remove_resource[3] and \
                                     resource[5] >= remove_resource[5]:
                                 brd[cell_y][cell_x] = 400
                                 remove_resource[6] -= 1
                                 remove_resource[3] += 2
                                 remove_resource[5] += 1
-                            elif d == 300 and int(str(brd[cell_y][cell_x])[0]) == 5 and resource[4] >= 2 and\
-                                    resource[3] >= 2 and resource[4] > remove_resource[4] + 1 and\
+                            elif d == 300 and int(str(brd[cell_y][cell_x])[0]) == 5 and resource[4] >= 2 and \
+                                    resource[3] >= 2 and resource[4] > remove_resource[4] + 1 and \
                                     resource[3] >= remove_resource[3]:
                                 brd[cell_y][cell_x] = 300
                                 remove_resource[5] -= 1
@@ -960,25 +961,25 @@ if __name__ == '__main__':
                                 remove_resource[3] += 2
                             # добыча ресурсов
                         if int(str(brd[cell_y][cell_x])[-1]) == step_of_person:
-                            if d == 100 and int(str(brd[cell_y][cell_x])[0]) == 4 and resource[4] > 0\
+                            if d == 100 and int(str(brd[cell_y][cell_x])[0]) == 4 and resource[4] > 0 \
                                     and resource[4] > remove_resource[4]:
                                 brd[cell_y][cell_x] = 100
                                 remove_resource[4] -= 3
                                 remove_resource[4] += 1
-                            elif d == 200 and int(str(brd[cell_y][cell_x])[0]) == 3 and resource[4] > 1\
+                            elif d == 200 and int(str(brd[cell_y][cell_x])[0]) == 3 and resource[4] > 1 \
                                     and resource[4] > remove_resource[4] + 1 and resource[3] >= remove_resource[3]:
                                 brd[cell_y][cell_x] = 200
                                 remove_resource[3] -= 1
                                 remove_resource[4] += 1
-                            elif d == 400 and int(str(brd[cell_y][cell_x])[0]) == 6 and resource[3] >= 2 and\
-                                    resource[5] >= 1 and resource[3] >= remove_resource[3] and\
+                            elif d == 400 and int(str(brd[cell_y][cell_x])[0]) == 6 and resource[3] >= 2 and \
+                                    resource[5] >= 1 and resource[3] >= remove_resource[3] and \
                                     resource[5] >= remove_resource[5]:
                                 brd[cell_y][cell_x] = 400
                                 remove_resource[6] -= 1
                                 remove_resource[3] += 2
                                 remove_resource[5] += 1
-                            elif d == 300 and int(str(brd[cell_y][cell_x])[0]) == 5 and resource[4] >= 2 and\
-                                    resource[3] >= 2 and resource[4] > remove_resource[4] + 1 and\
+                            elif d == 300 and int(str(brd[cell_y][cell_x])[0]) == 5 and resource[4] >= 2 and \
+                                    resource[3] >= 2 and resource[4] > remove_resource[4] + 1 and \
                                     resource[3] >= remove_resource[3]:
                                 brd[cell_y][cell_x] = 300
                                 remove_resource[5] -= 1
