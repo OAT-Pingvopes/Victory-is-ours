@@ -126,6 +126,7 @@ class InputBox:
         con = str(self.text)
         port = 5050
         try:
+            you = 'client'
             sock.connect((con, port))
             return (1, False)
         except:
