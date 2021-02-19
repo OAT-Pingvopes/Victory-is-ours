@@ -34,6 +34,7 @@ FONT = pygame.font.Font(None, 32)
 sock = socket.socket()
 host = ''
 port = 5050
+brd = None
 client = None
 pygame.mixer.music.load('data/Soviet.mp3')
 pygame.mixer.music.set_volume(0.1)
@@ -538,7 +539,9 @@ class Board:
                             brd = None
                             f = sock.recv(10240)
                             exec(f.decode('utf-8'))
+                            print(brd)
                             self.board = brd
+                            self.place_of_war()
                         except:
                             continue
                 elif event.type == KEYDOWN:
