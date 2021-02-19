@@ -541,7 +541,6 @@ class Board:
                             self.board = brd
                         except:
                             continue
-
                 elif event.type == KEYDOWN:
                     if event.key == K_ESCAPE and self.b == 1:
                         show = False
@@ -791,16 +790,6 @@ if __name__ == '__main__':
     screen = pygame.display.set_mode((1920, 1080))
     board = Board(62, 35)
     board.menu()
-    brd = None
-    if you == 'client':
-        data = sock.recv(10240)
-        print(data.decode('utf-8'))
-        exec(data.decode('utf-8'))
-        board.update_board(brd)
-        print(brd)
-    else:
-        brd = board.get_board()
-        print(brd)
     board.set_view(60, 30, 30)
     running = True
     soldat = Soldier(units_sprites)
@@ -810,6 +799,7 @@ if __name__ == '__main__':
     blue = Blue()
     red = Red()
     board.place_of_war()
+    brd = board.get_board()
     unit = Unit()
     unit.update_board([[0] * 62 for i in range(35)])
     brd_un = unit.get_board()
