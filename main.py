@@ -790,7 +790,9 @@ if __name__ == '__main__':
     if you == 'client':
         data = sock.recv(10240)
         exec(data)
-    board.update_board(brd)
+        board.update_board(brd)
+    else:
+        brd = board.get_board()
     board.set_view(60, 30, 30)
     running = True
     soldat = Soldier(units_sprites)
