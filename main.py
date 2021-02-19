@@ -535,6 +535,10 @@ class Board:
                         try:
                             self.b, show = ip.connect_to()
                             you = 'client'
+                            brd = None
+                            f = sock.recv(10240)
+                            exec(f.decode('utf-8'))
+                            self.board = brd
                         except:
                             continue
 
@@ -790,10 +794,13 @@ if __name__ == '__main__':
     brd = None
     if you == 'client':
         data = sock.recv(10240)
-        exec(data)
+        print(data.decode('utf-8'))
+        exec(data.decode('utf-8'))
         board.update_board(brd)
+        print(brd)
     else:
         brd = board.get_board()
+        print(brd)
     board.set_view(60, 30, 30)
     running = True
     soldat = Soldier(units_sprites)
