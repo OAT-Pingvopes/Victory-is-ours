@@ -16,8 +16,8 @@ c = 0
 # 6 - вольфрам(3)
 # 10 - артиллерия
 # 20 - пехота
-# 30 - мотопехота
-# 40 - танк
+# 30 - танк
+# 40 - мотопехота
 # 100 - дом лесника
 # 200 - рудник железа
 # 300 - нефтекачалка
@@ -849,17 +849,24 @@ if __name__ == '__main__':
                             b = 0
                         elif step_of_person == 1 and brd[cell_y][cell_x] in [1000, '--']:
                             b = 1
-                        if 2 >= cell_y - pos_y >= -2 and 2 >= cell_x - pos_x >= -2 and brd[cell_y][cell_x] == 2\
+                        if 2 >= cell_y - pos_y >= -2 and 2 >= cell_x - pos_x >= -2 and brd[cell_y][cell_x]\
+                                in [2, 111, 112]\
                                 and str(brd_un[pos_y][pos_x][0])[-1] == str(step_of_person) and\
-                                brd_un[pos_y][pos_x][-1] == 1:
+                                brd_un[pos_y][pos_x][-1] == 1 and (brd_un[cell_y][cell_x] == 0 or
+                                    ((brd_un[pos_y][pos_x][0] in [100, 101, 300, 301, 400, 401, 0]
+                                    and brd_un[cell_y][cell_x][0] in [200, 201]) or (brd_un[cell_y][cell_x][0] in
+                                                                             [100, 101, 300, 301, 400, 401, 0] and
+                                                                             brd_un[pos_y][pos_x][0] in [300, 301])
+                                    or (brd_un[pos_y][pos_x][0] in [300, 301, 400, 401, 0]
+                                    and brd_un[cell_y][cell_x][0] in [100, 101]))):
+                            print(brd_un[pos_y][pos_x])
                             brd_un[cell_y][cell_x] = [brd_un[pos_y][pos_x][0], 0]
                             brd_un[pos_y][pos_x] = 0
                             unit.update_board(brd_un)
                             for sprite in units_sprites:
                                 if sprite.rect.x == position[0] and sprite.rect.y == position[1]:
                                     sprite.kill()
-                                if str(brd_un[cell_y][cell_x])[-1] == str(step_of_person) and\
-                                        sprite.rect.x == cell_x * 30 + 60 and sprite.rect.y == cell_y * 30 + 30:
+                                if sprite.rect.x == cell_x * 30 + 60 and sprite.rect.y == cell_y * 30 + 30:
                                     sprite.kill()
                             position = (-30, -30)
                     if brd[cell_y][cell_x] in [1, 2, 111, 112, 3, 4, 5, 6, 4000, 4001, 5001, 5000, 6000, 6001, 3000,
@@ -1008,9 +1015,9 @@ if __name__ == '__main__':
         else:
             screen.blit(font2.render('Xод красных', True, (255, 0, 0)), (1700, 0))
         if b == 0:
-            screen.fill('blue')
+            screen.blit(pygame.font.Font(None, 300).render('Победа синих', True, (0, 0, 255)), (0, 0))
         elif b == 1:
-            screen.fill('red')
+            screen.blit(pygame.font.Font(None, 300).render('Победа красных', True, (255, 0, 0)), (0, 0))
         board.render()
         builds_sprites.draw(screen)
         units_sprites.draw(screen)
