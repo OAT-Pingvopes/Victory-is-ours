@@ -1,1 +1,2 @@
-def get_files_sizes()
+load_file = open('data/save.txt', mode='r').read()
+print(load_file)

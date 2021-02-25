@@ -370,8 +370,8 @@ class Board:
 
     def load_saves(self):
         # загрузка сохранений
-        load_file = open('data/save.txt', mode='r').readlines()
-        exec(load_file[0])
+        load_file = open('data/save.txt', mode='r').read()
+        exec(load_file)
         self.place_of_war()
 
     def place_of_war(self):
@@ -517,7 +517,7 @@ class Board:
                         sock.bind((host, port))
                         sock.listen(1)
                         conn, addr = sock.accept()
-                        conn.send((f'brd = {self.board}').encode('utf-8'))
+                        conn.send((f'self.board = {self.board}').encode('utf-8'))
                         client = conn
                         show = False
                         you = 'server'
@@ -790,11 +790,11 @@ if __name__ == '__main__':
     brd = None
     if you == 'client':
         f = sock.recv(10240)
-        exec(f.decode('utf-8'))
-        board.update_board(brd)
-        board.place_of_war()
-    else:
-        brd = board.get_board()
+        change_map = open('data/save.txt', mode='w')
+        change_map.write(f.decode('utf-8'))
+        change_map.close()
+        board.load_saves()
+    brd = board.get_board()
     board.set_view(60, 30, 30)
     running = True
     soldat = Soldier(units_sprites)
@@ -862,9 +862,9 @@ if __name__ == '__main__':
                             b = 0
                         elif step_of_person == 1 and brd[cell_y][cell_x] in [1000, '--']:
                             b = 1
-                        if 2 >= cell_y - pos_y >= -2 and 2 >= cell_x - pos_x >= -2 and brd[cell_y][cell_x] == 2 \
-                                and str(brd_un[pos_y][pos_x][0])[-1] == str(step_of_person) and \
-                                brd_un[pos_y][pos_x][-1] == 1:
+                        if (2 >= cell_y - pos_y >= -2) and (2 >= cell_x - pos_x >= -2) and (brd[cell_y][cell_x] == 2)\
+                                and str(brd_un[pos_y][pos_x][0])[-1] == str(step_of_person)\
+                                and brd_un[pos_y][pos_x][-1] == 1:
                             brd_un[cell_y][cell_x] = [brd_un[pos_y][pos_x][0], 0]
                             brd_un[pos_y][pos_x] = 0
                             unit.update_board(brd_un)
@@ -891,7 +891,7 @@ if __name__ == '__main__':
                                 resource[3] -= 2
                                 text_f = font.render(str(resource[4]), True, (255, 0, 0))
                                 text_i = font.render(str(resource[3]), True, (255, 0, 0))
-                            elif d == 20 and resource[4] >= 1 and resource[3] >= 1 and resource[4] > remove_resource[4] \
+                            elif d == 20 and resource[4] >= 1 and resource[3] >= 1 and resource[4] > remove_resource[4]\
                                     and resource[3] > remove_resource[3] and brd_un[cell_y][cell_x] == 0:
                                 unit.update(x, y, 20)
                                 resource[4] -= 1
@@ -919,11 +919,11 @@ if __name__ == '__main__':
                                 text_i = font.render(str(resource[3]), True, (255, 0, 0))
                                 text_o = font.render(str(resource[5]), True, (255, 0, 0))
                             elif d == 500 and resource[4] >= 2 and resource[3] >= 2 \
-                                    and resource[4] > remove_resource[4] + 1 and resource[3] >= remove_resource[3] \
-                                    and brd[cell_y + 1][cell_x] in [2, 1, '--', '-|', 1000, 2000, 111, 112] and \
-                                    brd[cell_y][cell_x + 1] in [2, 1, '--', '-|', 1000, 2000, 111, 112] \
+                                    and resource[4] > remove_resource[4] + 1 and resource[3] >= remove_resource[3]\
+                                    and brd[cell_y + 1][cell_x] in [2, 1, '--', '-|', 1000, 2000, 111, 112] and\
+                                    brd[cell_y][cell_x + 1] in [2, 1, '--', '-|', 1000, 2000, 111, 112]\
                                     and brd[cell_y + 1][cell_x + 1] in [2, 1, '--', '-|', 1000, 2000, 111, 112]:
-                                brd[cell_y][cell_x], brd[cell_y + 1][cell_x + 1], brd[cell_y + 1][cell_x], \
+                                brd[cell_y][cell_x], brd[cell_y + 1][cell_x + 1], brd[cell_y + 1][cell_x],\
                                 brd[cell_y][cell_x + 1] = 500, '-', '-', '-'
                                 for i in range(10):
                                     for j in range(10):
@@ -1018,9 +1018,9 @@ if __name__ == '__main__':
         all_sprites.draw(screen)
         if step_of_person == 0:
             screen.blit(font2.render('Xод синих', True, (0, 0, 255)), (1700, 0))
-            if you == 'server':
-                new = board.get_board()
-                client.send()
+            # if you == 'server':
+            #     new = board.get_board()
+            #     client.send()
         else:
             screen.blit(font2.render('Xод красных', True, (255, 0, 0)), (1700, 0))
         if b == 0:
