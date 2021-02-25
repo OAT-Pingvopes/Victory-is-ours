@@ -36,7 +36,7 @@ host = ''
 port = 5050
 brd = None
 client = None
-pygame.mixer.music.load('data/Soviet.mp3')
+pygame.mixer.music.load('data/Agression.mp3')
 pygame.mixer.music.set_volume(0.1)
 pygame.mixer.music.play(-1)
 
@@ -188,6 +188,7 @@ class Board:
         self.width = width
         self.height = height
         self.board = []
+        self.you = ''
         self.resources1_1 = {3: 12, 4: 30, 5: 3, 6: 4}
         self.resources1_2 = {3: 12, 4: 30, 5: 3, 6: 4}
         self.resources2_1 = {3: 12, 4: 30, 5: 3, 6: 4}
@@ -517,10 +518,10 @@ class Board:
                         sock.bind((host, port))
                         sock.listen(1)
                         conn, addr = sock.accept()
-                        conn.send((f'self.board = {self.board}').encode('utf-8'))
+                        conn.send((f'self.board = {str(self.board)}').encode('utf-8'))
                         client = conn
                         show = False
-                        you = 'server'
+                        self.you = 'server'
                         self.b = 1
                     elif save.pressed(event.pos) and self.b == 1:
                         file = open('data/save.txt', 'w')
@@ -535,7 +536,7 @@ class Board:
                     if ip_conn.pressed(event.pos):
                         try:
                             self.b, show = ip.connect_to()
-                            you = 'client'
+                            self.you = 'client'
                         except:
                             continue
                 elif event.type == KEYDOWN:
@@ -564,6 +565,9 @@ class Board:
             pygame.display.update()
             clock.tick(60)
         screen.fill('black')
+
+    def get_you(self):
+        return self.you
 
 
 class Build(pygame.sprite.Sprite):
@@ -788,8 +792,10 @@ if __name__ == '__main__':
     board = Board(62, 35)
     board.menu()
     brd = None
+    you = board.get_you()
     if you == 'client':
         f = sock.recv(10240)
+        print(f)
         change_map = open('data/save.txt', mode='w')
         change_map.write(f.decode('utf-8'))
         change_map.close()
