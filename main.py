@@ -72,6 +72,11 @@ def load_image(name, colorkey=None):
     return image
 
 
+def data_received(data):
+    change_map = open('data/save.txt', mode='w')
+    change_map.write(data.decode('utf-8'))
+    change_map.close()
+
 class InputBox:
     def __init__(self, x, y, w, h, text=''):
         self.rect = pygame.Rect(x, y, w, h)
@@ -129,7 +134,7 @@ class InputBox:
         try:
             you = 'client'
             sock.connect((con, port))
-            return (1, False)
+            return (1, False, con)
         except:
             self.txt_surface = FONT.render('Connection lost', True, self.color)
 
@@ -189,6 +194,8 @@ class Board:
         self.height = height
         self.board = []
         self.you = ''
+        self.server = ''
+        self.client = ''
         self.resources1_1 = {3: 12, 4: 30, 5: 3, 6: 4}
         self.resources1_2 = {3: 12, 4: 30, 5: 3, 6: 4}
         self.resources2_1 = {3: 12, 4: 30, 5: 3, 6: 4}
@@ -517,9 +524,8 @@ class Board:
                                             'Продолжить', (255, 255, 255))
                         sock.bind((host, port))
                         sock.listen(1)
-                        conn, addr = sock.accept()
-                        conn.send((f'self.board = {str(self.board)}').encode('utf-8'))
-                        client = conn
+                        self.conn, addr = sock.accept()
+                        self.conn.send((f'self.board = {str(self.board)}').encode('utf-8'))
                         show = False
                         self.you = 'server'
                         self.b = 1
@@ -535,7 +541,8 @@ class Board:
                         input_box1.register()
                     if ip_conn.pressed(event.pos):
                         try:
-                            self.b, show = ip.connect_to()
+                            self.b, show, server = ip.connect_to()
+                            self.server = server
                             self.you = 'client'
                         except:
                             continue
@@ -568,6 +575,12 @@ class Board:
 
     def get_you(self):
         return self.you
+
+    def get_client(self):
+        return self.conn
+
+    def get_server(self):
+        return self.server
 
 
 class Build(pygame.sprite.Sprite):
@@ -795,14 +808,13 @@ if __name__ == '__main__':
     you = board.get_you()
     if you == 'client':
         f = sock.recv(10240)
-        print(f)
-        change_map = open('data/save.txt', mode='w')
-        change_map.write(f.decode('utf-8'))
-        change_map.close()
+        data_received(f)
         board.load_saves()
     brd = board.get_board()
     board.set_view(60, 30, 30)
     running = True
+    client = board.get_client()
+    server = board.get_server()
     soldat = Soldier(units_sprites)
     artil = Artillery(units_sprites)
     tank = Tank(units_sprites)
@@ -1024,11 +1036,30 @@ if __name__ == '__main__':
         all_sprites.draw(screen)
         if step_of_person == 0:
             screen.blit(font2.render('Xод синих', True, (0, 0, 255)), (1700, 0))
-            # if you == 'server':
-            #     new = board.get_board()
-            #     client.send()
+            if you == 'server':
+                client.send((f'brd = {brd}').encode('utf-8'))
+                client.send((f'brd_un = {brd_un}').encode('utf-8'))
+                client.send((f'step_of_person = {step_of_person}').encode('utf-8'))
+            if you == 'client':
+                n_b = sock.recv(10240)
+                n_b_u = sock.recv(10240)
+                s_o_p = sock.recv(10240)
+                exec(n_b.decode('utf-8'))
+                exec(n_b_u.decode('utf-8'))
+                exec(s_o_p.decode('utf-8'))
         else:
             screen.blit(font2.render('Xод красных', True, (255, 0, 0)), (1700, 0))
+            if you == 'server':
+                n_b = client.recv(10240)
+                n_b_u = client.recv(10240)
+                s_o_p = client.recv(10240)
+                exec(n_b.decode('utf-8'))
+                exec(n_b_u.decode('utf-8'))
+                exec(s_o_p.decode('utf-8'))
+            if you == 'client':
+                sock.send((f'brd = {brd}').encode('utf-8'))
+                sock.send((f'brd_un = {brd_un}').encode('utf-8'))
+                sock.send((f'step_of_person = {step_of_person}').encode('utf-8'))
         if b == 0:
             screen.fill('blue')
         elif b == 1:
