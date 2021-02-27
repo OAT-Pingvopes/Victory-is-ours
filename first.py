@@ -4,8 +4,13 @@ import sys
 import socket
 from pygame.locals import *
 import pygame
+import http.client
+conne = http.client.HTTPConnection("ifconfig.me")
+conne.request("GET", "/ip")
+your_ip = (conne.getresponse().read()).decode()
 pygame.init()
 b = 2
+you = ''
 c = 0
 # 0 - вода
 # 1 - выделенная клетка
@@ -33,7 +38,9 @@ FONT = pygame.font.Font(None, 32)
 sock = socket.socket()
 host = ''
 port = 5050
-pygame.mixer.music.load('data/Soviet.mp3')
+brd = None
+client = None
+pygame.mixer.music.load('data/Agression.mp3')
 pygame.mixer.music.set_volume(0.1)
 pygame.mixer.music.play(-1)
 
@@ -68,6 +75,11 @@ def load_image(name, colorkey=None):
     image = pygame.image.load(fullname)
     return image
 
+
+def data_received(data):
+    change_map = open('data/save.txt', mode='w')
+    change_map.write(data.decode('utf-8'))
+    change_map.close()
 
 class InputBox:
     def __init__(self, x, y, w, h, text=''):
@@ -124,8 +136,9 @@ class InputBox:
         con = str(self.text)
         port = 5050
         try:
+            you = 'client'
             sock.connect((con, port))
-            return (1, False)
+            return (1, False, con)
         except:
             self.txt_surface = FONT.render('Connection lost', True, self.color)
 
@@ -184,6 +197,10 @@ class Board:
         self.width = width
         self.height = height
         self.board = []
+        self.you = ''
+        self.server = ''
+        self.client = ''
+        self.conn = your_ip
         self.resources1_1 = {3: 12, 4: 30, 5: 3, 6: 4}
         self.resources1_2 = {3: 12, 4: 30, 5: 3, 6: 4}
         self.resources2_1 = {3: 12, 4: 30, 5: 3, 6: 4}
@@ -366,8 +383,8 @@ class Board:
 
     def load_saves(self):
         # загрузка сохранений
-        load_file = open('data/save.txt', mode='r').readlines()
-        exec(load_file[0])
+        load_file = open('data/save.txt', mode='r').read()
+        exec(load_file)
         self.place_of_war()
 
     def place_of_war(self):
@@ -510,11 +527,12 @@ class Board:
                     elif start.pressed(event.pos) and self.nick:
                         cont.create_button(screen, (34, 139, 34), 860, 430, 200, 50, 100,
                                             'Продолжить', (255, 255, 255))
-                        #sock.bind((host, port))
-                        #sock.listen(1)
-                        #conn, addr = sock.accept()
-                        #conn.send((f'self.{self.board}').encode('utf-8'))
+                        sock.bind((host, port))
+                        sock.listen(1)
+                        self.conn, addr = sock.accept()
+                        self.conn.send((f'self.board = {str(self.board)}').encode('utf-8'))
                         show = False
+                        self.you = 'server'
                         self.b = 1
                     elif save.pressed(event.pos) and self.b == 1:
                         file = open('data/save.txt', 'w')
@@ -528,10 +546,11 @@ class Board:
                         input_box1.register()
                     if ip_conn.pressed(event.pos):
                         try:
-                            self.b, show = ip.connect_to()
+                            self.b, show, server = ip.connect_to()
+                            self.server = server
+                            self.you = 'client'
                         except:
                             continue
-
                 elif event.type == KEYDOWN:
                     if event.key == K_ESCAPE and self.b == 1:
                         show = False
@@ -558,6 +577,15 @@ class Board:
             pygame.display.update()
             clock.tick(60)
         screen.fill('black')
+
+    def get_you(self):
+        return self.you
+
+    def get_client(self):
+        return self.conn
+
+    def get_server(self):
+        return self.server
 
 
 class Build(pygame.sprite.Sprite):
@@ -781,8 +809,17 @@ if __name__ == '__main__':
     screen = pygame.display.set_mode((1920, 1080))
     board = Board(62, 35)
     board.menu()
+    brd = None
+    you = board.get_you()
+    if you == 'client':
+        f = sock.recv(10240)
+        data_received(f)
+        board.load_saves()
+    brd = board.get_board()
     board.set_view(60, 30, 30)
     running = True
+    client = board.get_client()
+    server = board.get_server()
     soldat = Soldier(units_sprites)
     artil = Artillery(units_sprites)
     tank = Tank(units_sprites)
@@ -790,7 +827,6 @@ if __name__ == '__main__':
     blue = Blue()
     red = Red()
     board.place_of_war()
-    brd = board.get_board()
     unit = Unit()
     unit.update_board([[0] * 62 for i in range(35)])
     brd_un = unit.get_board()
@@ -876,9 +912,9 @@ if __name__ == '__main__':
                         if ((step_of_person == 0 and (5 >= cell_x - 12 >= -5 or 5 >= cell_x - 13 >= -5) and
                              (5 >= cell_y - 17 >= -5 or 5 >= cell_y - 16 >= -5)) or
                             (step_of_person == 1 and (5 >= cell_x - 49 >= -5 or 5 >= cell_x - 50 >= -5))
-                                and (5 >= cell_y - 17 >= -5 or 5 >= cell_y - 16 >= -5))\
+                            and (5 >= cell_y - 17 >= -5 or 5 >= cell_y - 16 >= -5)) \
                                 or brd[cell_y][cell_x] == step_of_person + 111:
-                            if d == 10 and resource[4] >= 1 and resource[3] >= 2 and resource[4] > remove_resource[4]\
+                            if d == 10 and resource[4] >= 1 and resource[3] >= 2 and resource[4] > remove_resource[4] \
                                     and resource[3] > remove_resource[3] and brd_un[cell_y][cell_x] == 0:
                                 unit.update(x, y, 10)
                                 resource[4] -= 1
@@ -902,7 +938,7 @@ if __name__ == '__main__':
                                 text_i = font.render(str(resource[3]), True, (255, 0, 0))
                                 text_o = font.render(str(resource[5]), True, (255, 0, 0))
                                 text_w = font.render(str(resource[6]), True, (255, 0, 0))
-                            elif d == 40 and resource[3] >= 2 and resource[4] > 1 and resource[5] >= 1\
+                            elif d == 40 and resource[3] >= 2 and resource[4] > 1 and resource[5] >= 1 \
                                     and resource[3] > remove_resource[3] and resource[5] > remove_resource[5] \
                                     and resource[4] > remove_resource[4] and brd_un[cell_y][cell_x] == 0:
                                 unit.update(x, y, 40)
@@ -912,7 +948,7 @@ if __name__ == '__main__':
                                 text_f = font.render(str(resource[4]), True, (255, 0, 0))
                                 text_i = font.render(str(resource[3]), True, (255, 0, 0))
                                 text_o = font.render(str(resource[5]), True, (255, 0, 0))
-                            elif d == 500 and resource[4] >= 2 and resource[3] >= 2\
+                            elif d == 500 and resource[4] >= 2 and resource[3] >= 2 \
                                     and resource[4] > remove_resource[4] + 1 and resource[3] >= remove_resource[3]\
                                     and brd[cell_y + 1][cell_x] in [2, 1, '--', '-|', 1000, 2000, 111, 112] and\
                                     brd[cell_y][cell_x + 1] in [2, 1, '--', '-|', 1000, 2000, 111, 112]\
@@ -924,30 +960,30 @@ if __name__ == '__main__':
                                         if brd[cell_y - 4 + i][cell_x - 4 + j] == 2:
                                             brd[cell_y - 4 + i][cell_x - 4 + j] = 111 + step_of_person
                                         elif brd[cell_y - 4 + i][cell_x - 4 + j] in [3, 4, 5, 6]:
-                                            brd[cell_y - 4 + i][cell_x - 4 + j] =\
+                                            brd[cell_y - 4 + i][cell_x - 4 + j] = \
                                                 int(str(brd[cell_y - 4 + i][cell_x - 4 + j]) +
                                                     '00' + str(step_of_person))
                                 remove_resource[4] += 2
                                 remove_resource[3] += 2
-                            elif d == 100 and int(str(brd[cell_y][cell_x])[0]) == 4 and resource[4] > 0\
+                            elif d == 100 and int(str(brd[cell_y][cell_x])[0]) == 4 and resource[4] > 0 \
                                     and resource[4] > remove_resource[4]:
                                 brd[cell_y][cell_x] = 100
                                 remove_resource[4] -= 3
                                 remove_resource[4] += 1
-                            elif d == 200 and int(str(brd[cell_y][cell_x])[0]) == 3 and resource[4] > 1\
+                            elif d == 200 and int(str(brd[cell_y][cell_x])[0]) == 3 and resource[4] > 1 \
                                     and resource[4] > remove_resource[4] + 1 and resource[3] >= remove_resource[3]:
                                 brd[cell_y][cell_x] = 200
                                 remove_resource[3] -= 1
                                 remove_resource[4] += 1
-                            elif d == 400 and int(str(brd[cell_y][cell_x])[0]) == 6 and resource[3] >= 2 and\
-                                    resource[5] >= 1 and resource[3] >= remove_resource[3] and\
+                            elif d == 400 and int(str(brd[cell_y][cell_x])[0]) == 6 and resource[3] >= 2 and \
+                                    resource[5] >= 1 and resource[3] >= remove_resource[3] and \
                                     resource[5] >= remove_resource[5]:
                                 brd[cell_y][cell_x] = 400
                                 remove_resource[6] -= 1
                                 remove_resource[3] += 2
                                 remove_resource[5] += 1
-                            elif d == 300 and int(str(brd[cell_y][cell_x])[0]) == 5 and resource[4] >= 2 and\
-                                    resource[3] >= 2 and resource[4] > remove_resource[4] + 1 and\
+                            elif d == 300 and int(str(brd[cell_y][cell_x])[0]) == 5 and resource[4] >= 2 and \
+                                    resource[3] >= 2 and resource[4] > remove_resource[4] + 1 and \
                                     resource[3] >= remove_resource[3]:
                                 brd[cell_y][cell_x] = 300
                                 remove_resource[5] -= 1
@@ -955,25 +991,25 @@ if __name__ == '__main__':
                                 remove_resource[3] += 2
                             # добыча ресурсов
                         if int(str(brd[cell_y][cell_x])[-1]) == step_of_person:
-                            if d == 100 and int(str(brd[cell_y][cell_x])[0]) == 4 and resource[4] > 0\
+                            if d == 100 and int(str(brd[cell_y][cell_x])[0]) == 4 and resource[4] > 0 \
                                     and resource[4] > remove_resource[4]:
                                 brd[cell_y][cell_x] = 100
                                 remove_resource[4] -= 3
                                 remove_resource[4] += 1
-                            elif d == 200 and int(str(brd[cell_y][cell_x])[0]) == 3 and resource[4] > 1\
+                            elif d == 200 and int(str(brd[cell_y][cell_x])[0]) == 3 and resource[4] > 1 \
                                     and resource[4] > remove_resource[4] + 1 and resource[3] >= remove_resource[3]:
                                 brd[cell_y][cell_x] = 200
                                 remove_resource[3] -= 1
                                 remove_resource[4] += 1
-                            elif d == 400 and int(str(brd[cell_y][cell_x])[0]) == 6 and resource[3] >= 2 and\
-                                    resource[5] >= 1 and resource[3] >= remove_resource[3] and\
+                            elif d == 400 and int(str(brd[cell_y][cell_x])[0]) == 6 and resource[3] >= 2 and \
+                                    resource[5] >= 1 and resource[3] >= remove_resource[3] and \
                                     resource[5] >= remove_resource[5]:
                                 brd[cell_y][cell_x] = 400
                                 remove_resource[6] -= 1
                                 remove_resource[3] += 2
                                 remove_resource[5] += 1
-                            elif d == 300 and int(str(brd[cell_y][cell_x])[0]) == 5 and resource[4] >= 2 and\
-                                    resource[3] >= 2 and resource[4] > remove_resource[4] + 1 and\
+                            elif d == 300 and int(str(brd[cell_y][cell_x])[0]) == 5 and resource[4] >= 2 and \
+                                    resource[3] >= 2 and resource[4] > remove_resource[4] + 1 and \
                                     resource[3] >= remove_resource[3]:
                                 brd[cell_y][cell_x] = 300
                                 remove_resource[5] -= 1
@@ -993,9 +1029,17 @@ if __name__ == '__main__':
                     if step_of_person == 0:
                         step_of_person = 1
                         resource = red.res()
+                        if you == 'server':
+                            client.send(f'brd = {brd}'.encode('utf-8'))
+                            client.send(f'brd_un = {brd_un}'.encode('utf-8'))
+                            client.send(f'step_of_person = {step_of_person}'.encode('utf-8'))
                     else:
                         step_of_person = 0
                         resource = blue.res()
+                        if you == 'client':
+                            sock.send(f'brd = {brd}'.encode('utf-8'))
+                            sock.send(f'brd_un = {brd_un}'.encode('utf-8'))
+                            sock.send(f'step_of_person = {step_of_person}'.encode('utf-8'))
                     remove_resource = {3: 0, 4: 0, 5: 0, 6: 0}
                     text_f = font.render(str(resource[4]), True, (255, 0, 0))
                     text_i = font.render(str(resource[3]), True, (255, 0, 0))
@@ -1012,8 +1056,22 @@ if __name__ == '__main__':
         all_sprites.draw(screen)
         if step_of_person == 0:
             screen.blit(font2.render('Xод синих', True, (0, 0, 255)), (1700, 0))
+            if you == 'client':
+                n_b = sock.recv(10240)
+                n_b_u = sock.recv(10240)
+                s_o_p = sock.recv(10240)
+                exec(n_b.decode('utf-8'))
+                exec(n_b_u.decode('utf-8'))
+                exec(s_o_p.decode('utf-8'))
         else:
             screen.blit(font2.render('Xод красных', True, (255, 0, 0)), (1700, 0))
+            if you == 'server':
+                n_b = client.recv(10240)
+                n_b_u = client.recv(10240)
+                s_o_p = client.recv(10240)
+                exec(n_b.decode('utf-8'))
+                exec(n_b_u.decode('utf-8'))
+                exec(s_o_p.decode('utf-8'))
         if b == 0:
             screen.blit(pygame.font.Font(None, 300).render('Победа синих', True, (0, 0, 255)), (0, 0))
         elif b == 1:
