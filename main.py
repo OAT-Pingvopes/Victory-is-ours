@@ -4,6 +4,7 @@ import sys
 import socket
 from pygame.locals import *
 import pygame
+import time
 import http.client
 conne = http.client.HTTPConnection("ifconfig.me")
 conne.request("GET", "/ip")
@@ -21,8 +22,8 @@ c = 0
 # 6 - вольфрам(3)
 # 10 - артиллерия
 # 20 - пехота
-# 30 - мотопехота
-# 40 - танк
+# 30 - танк
+# 40 - мотопехота
 # 100 - дом лесника
 # 200 - рудник железа
 # 300 - нефтекачалка
@@ -812,7 +813,7 @@ if __name__ == '__main__':
     brd = None
     you = board.get_you()
     if you == 'client':
-        f = sock.recv(10240)
+        f = sock.recv(10485760)
         data_received(f)
         board.load_saves()
     brd = board.get_board()
@@ -885,17 +886,24 @@ if __name__ == '__main__':
                             b = 0
                         elif step_of_person == 1 and brd[cell_y][cell_x] in [1000, '--']:
                             b = 1
-                        if (2 >= cell_y - pos_y >= -2) and (2 >= cell_x - pos_x >= -2) and (brd[cell_y][cell_x] == 2)\
-                                and str(brd_un[pos_y][pos_x][0])[-1] == str(step_of_person)\
-                                and brd_un[pos_y][pos_x][-1] == 1:
+                        if 2 >= cell_y - pos_y >= -2 and 2 >= cell_x - pos_x >= -2 and brd[cell_y][cell_x] \
+                                in [2, 111, 112] \
+                                and str(brd_un[pos_y][pos_x][0])[-1] == str(step_of_person) and \
+                                brd_un[pos_y][pos_x][-1] == 1 and (brd_un[cell_y][cell_x] == 0 or
+                                                                   ((brd_un[pos_y][pos_x][0] in [100, 101, 300, 301, 400, 401, 0]
+                                                                     and brd_un[cell_y][cell_x][0] in [200, 201]) or (brd_un[cell_y][cell_x][0] in
+                                                                                                                      [100, 101, 300, 301, 400, 401, 0] and
+                                                                                                                      brd_un[pos_y][pos_x][0] in [300, 301])
+                                                                    or (brd_un[pos_y][pos_x][0] in [300, 301, 400, 401, 0]
+                                                                        and brd_un[cell_y][cell_x][0] in [100, 101]))):
+                            print(brd_un[pos_y][pos_x])
                             brd_un[cell_y][cell_x] = [brd_un[pos_y][pos_x][0], 0]
                             brd_un[pos_y][pos_x] = 0
                             unit.update_board(brd_un)
                             for sprite in units_sprites:
                                 if sprite.rect.x == position[0] and sprite.rect.y == position[1]:
                                     sprite.kill()
-                                if str(brd_un[cell_y][cell_x])[-1] == str(step_of_person) and \
-                                        sprite.rect.x == cell_x * 30 + 60 and sprite.rect.y == cell_y * 30 + 30:
+                                if sprite.rect.x == cell_x * 30 + 60 and sprite.rect.y == cell_y * 30 + 30:
                                     sprite.kill()
                             position = (-30, -30)
                     if brd[cell_y][cell_x] in [1, 2, 111, 112, 3, 4, 5, 6, 4000, 4001, 5001, 5000, 6000, 6001, 3000,
@@ -914,7 +922,7 @@ if __name__ == '__main__':
                                 resource[3] -= 2
                                 text_f = font.render(str(resource[4]), True, (255, 0, 0))
                                 text_i = font.render(str(resource[3]), True, (255, 0, 0))
-                            elif d == 20 and resource[4] >= 1 and resource[3] >= 1 and resource[4] > remove_resource[4]\
+                            elif d == 20 and resource[4] >= 1 and resource[3] >= 1 and resource[4] > remove_resource[4] \
                                     and resource[3] > remove_resource[3] and brd_un[cell_y][cell_x] == 0:
                                 unit.update(x, y, 20)
                                 resource[4] -= 1
@@ -942,11 +950,11 @@ if __name__ == '__main__':
                                 text_i = font.render(str(resource[3]), True, (255, 0, 0))
                                 text_o = font.render(str(resource[5]), True, (255, 0, 0))
                             elif d == 500 and resource[4] >= 2 and resource[3] >= 2 \
-                                    and resource[4] > remove_resource[4] + 1 and resource[3] >= remove_resource[3]\
-                                    and brd[cell_y + 1][cell_x] in [2, 1, '--', '-|', 1000, 2000, 111, 112] and\
-                                    brd[cell_y][cell_x + 1] in [2, 1, '--', '-|', 1000, 2000, 111, 112]\
+                                    and resource[4] > remove_resource[4] + 1 and resource[3] >= remove_resource[3] \
+                                    and brd[cell_y + 1][cell_x] in [2, 1, '--', '-|', 1000, 2000, 111, 112] and \
+                                    brd[cell_y][cell_x + 1] in [2, 1, '--', '-|', 1000, 2000, 111, 112] \
                                     and brd[cell_y + 1][cell_x + 1] in [2, 1, '--', '-|', 1000, 2000, 111, 112]:
-                                brd[cell_y][cell_x], brd[cell_y + 1][cell_x + 1], brd[cell_y + 1][cell_x],\
+                                brd[cell_y][cell_x], brd[cell_y + 1][cell_x + 1], brd[cell_y + 1][cell_x], \
                                 brd[cell_y][cell_x + 1] = 500, '-', '-', '-'
                                 for i in range(10):
                                     for j in range(10):
@@ -1023,15 +1031,27 @@ if __name__ == '__main__':
                         step_of_person = 1
                         resource = red.res()
                         if you == 'server':
+                            client.send('1'.encode('utf-8'))
+                            time.sleep(1)
                             client.send(f'brd = {brd}'.encode('utf-8'))
+                            time.sleep(1)
                             client.send(f'brd_un = {brd_un}'.encode('utf-8'))
+                            time.sleep(1)
+                            client.send('1'.encode('utf-8'))
+                            time.sleep(1)
                             client.send(f'step_of_person = {step_of_person}'.encode('utf-8'))
                     else:
                         step_of_person = 0
                         resource = blue.res()
                         if you == 'client':
+                            sock.send('1'.encode('utf-8'))
+                            time.sleep(1)
                             sock.send(f'brd = {brd}'.encode('utf-8'))
+                            time.sleep(1)
                             sock.send(f'brd_un = {brd_un}'.encode('utf-8'))
+                            time.sleep(1)
+                            sock.send('1'.encode('utf-8'))
+                            time.sleep(1)
                             sock.send(f'step_of_person = {step_of_person}'.encode('utf-8'))
                     remove_resource = {3: 0, 4: 0, 5: 0, 6: 0}
                     text_f = font.render(str(resource[4]), True, (255, 0, 0))
@@ -1047,32 +1067,48 @@ if __name__ == '__main__':
         screen.blit(text_o, (60, 390))
         screen.blit(text_w, (60, 450))
         all_sprites.draw(screen)
-        if step_of_person == 0:
-            screen.blit(font2.render('Xод синих', True, (0, 0, 255)), (1700, 0))
-            if you == 'client':
-                n_b = sock.recv(10240)
-                n_b_u = sock.recv(10240)
-                s_o_p = sock.recv(10240)
-                exec(n_b.decode('utf-8'))
-                exec(n_b_u.decode('utf-8'))
-                exec(s_o_p.decode('utf-8'))
-        else:
-            screen.blit(font2.render('Xод красных', True, (255, 0, 0)), (1700, 0))
-            if you == 'server':
-                n_b = client.recv(10240)
-                n_b_u = client.recv(10240)
-                s_o_p = client.recv(10240)
-                exec(n_b.decode('utf-8'))
-                exec(n_b_u.decode('utf-8'))
-                exec(s_o_p.decode('utf-8'))
         if b == 0:
-            screen.fill('blue')
+            screen.blit(pygame.font.Font(None, 300).render('Победа синих', True, (0, 0, 255)), (0, 0))
         elif b == 1:
-            screen.fill('red')
+            screen.blit(pygame.font.Font(None, 300).render('Победа красных', True, (255, 0, 0)), (0, 0))
         board.render()
         builds_sprites.draw(screen)
         units_sprites.draw(screen)
         pygame.draw.rect(screen, 'white', (position, (30, 30)), 2)
         pygame.display.flip()
+        if step_of_person == 0:
+            screen.blit(font2.render('Xод синих', True, (0, 0, 255)), (1700, 0))
+            if you == 'client':
+                n_b = sock.recv(10485760)
+                time.sleep(1)
+                n_b_plus = sock.recv(10485760)
+                time.sleep(1)
+                exec(n_b_plus.decode('utf-8'))
+                n_b_u = sock.recv(10485760)
+                exec(n_b_u.decode('utf-8'))
+                g = sock.recv(10485760)
+                s_o_p = sock.recv(10485760)
+                exec(s_o_p.decode('utf-8'))
+                board.update_board(brd)
+                unit.update_board(brd_un)
+                board.render()
+                unit.render()
+        else:
+            screen.blit(font2.render('Xод красных', True, (255, 0, 0)), (1700, 0))
+            if you == 'server':
+                n_b = sock.recv(10485760)
+                time.sleep(1)
+                n_b_plus = sock.recv(10485760)
+                time.sleep(1)
+                exec(n_b_plus.decode('utf-8'))
+                n_b_u = sock.recv(10485760)
+                exec(n_b_u.decode('utf-8'))
+                g = sock.recv(10485760)
+                s_o_p = sock.recv(10485760)
+                exec(s_o_p.decode('utf-8'))
+                board.update_board(brd)
+                unit.update_board(brd_un)
+                board.render()
+                unit.render()
         clock.tick(60)
     pygame.quit()
