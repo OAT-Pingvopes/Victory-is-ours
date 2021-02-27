@@ -4,6 +4,7 @@ import sys
 import socket
 from pygame.locals import *
 import pygame
+import time
 import http.client
 conne = http.client.HTTPConnection("ifconfig.me")
 conne.request("GET", "/ip")
@@ -48,8 +49,7 @@ pygame.mixer.music.play(-1)
 class Red:
     # подсчёт ресурсов красного игрока
     def __init__(self):
-        # self.resource = {3: 0, 4: 1, 5: 0, 6: 0}
-        self.resource = {3: 100, 4: 100, 5: 100, 6: 100}
+        self.resource = {3: 0, 4: 1, 5: 0, 6: 0}
 
     def res(self):
         return self.resource
@@ -58,8 +58,7 @@ class Red:
 class Blue:
     # подсчёт ресурсов синего игрока
     def __init__(self):
-        # self.resource = {3: 0, 4: 1, 5: 0, 6: 0}
-        self.resource = {3: 100, 4: 100, 5: 100, 6: 100}
+        self.resource = {3: 0, 4: 1, 5: 0, 6: 0}
 
     def res(self):
         return self.resource
@@ -812,7 +811,7 @@ if __name__ == '__main__':
     brd = None
     you = board.get_you()
     if you == 'client':
-        f = sock.recv(10240)
+        f = sock.recv(10485760)
         data_received(f)
         board.load_saves()
     brd = board.get_board()
@@ -885,20 +884,22 @@ if __name__ == '__main__':
                             b = 0
                         elif step_of_person == 1 and brd[cell_y][cell_x] in [1000, '--']:
                             b = 1
-                        if 2 >= cell_y - pos_y >= -2 and 2 >= cell_x - pos_x >= -2 and brd[cell_y][cell_x]\
-                                in [2, 111, 112]\
-                                and str(brd_un[pos_y][pos_x][0])[-1] == str(step_of_person) and\
+                        if 2 >= cell_y - pos_y >= -2 and 2 >= cell_x - pos_x >= -2 and brd[cell_y][cell_x] \
+                                in [2, 111, 112] \
+                                and str(brd_un[pos_y][pos_x][0])[-1] == str(step_of_person) and \
                                 brd_un[pos_y][pos_x][-1] == 1 and (brd_un[cell_y][cell_x] == 0 or
-                                    ((brd_un[pos_y][pos_x][0] in [100, 101, 300, 301, 400, 401, 0]
-                                    and brd_un[cell_y][cell_x][0] in [200, 201]) or (brd_un[cell_y][cell_x][0] in
-                                                                             [100, 101, 300, 301, 400, 401, 0] and
-                                                                             brd_un[pos_y][pos_x][0] in [300, 301])
-                                    or (brd_un[pos_y][pos_x][0] in [300, 301, 400, 401, 0]
-                                    and brd_un[cell_y][cell_x][0] in [100, 101]))):
+                                                                   ((brd_un[pos_y][pos_x][0] in [100, 101, 300, 301, 400, 401, 0]
+                                                                     and brd_un[cell_y][cell_x][0] in [200, 201]) or (brd_un[cell_y][cell_x][0] in
+                                                                                                                      [100, 101, 300, 301, 400, 401, 0] and
+                                                                                                                      brd_un[pos_y][pos_x][0] in [300, 301])
+                                                                    or (brd_un[pos_y][pos_x][0] in [300, 301, 400, 401, 0]
+                                                                        and brd_un[cell_y][cell_x][0] in [100, 101]))):
                             print(brd_un[pos_y][pos_x])
                             brd_un[cell_y][cell_x] = [brd_un[pos_y][pos_x][0], 0]
                             brd_un[pos_y][pos_x] = 0
                             unit.update_board(brd_un)
+                            brd_un = unit.get_board()
+                            print(brd_un)
                             for sprite in units_sprites:
                                 if sprite.rect.x == position[0] and sprite.rect.y == position[1]:
                                     sprite.kill()
@@ -921,7 +922,7 @@ if __name__ == '__main__':
                                 resource[3] -= 2
                                 text_f = font.render(str(resource[4]), True, (255, 0, 0))
                                 text_i = font.render(str(resource[3]), True, (255, 0, 0))
-                            elif d == 20 and resource[4] >= 1 and resource[3] >= 1 and resource[4] > remove_resource[4]\
+                            elif d == 20 and resource[4] >= 1 and resource[3] >= 1 and resource[4] > remove_resource[4] \
                                     and resource[3] > remove_resource[3] and brd_un[cell_y][cell_x] == 0:
                                 unit.update(x, y, 20)
                                 resource[4] -= 1
@@ -949,11 +950,11 @@ if __name__ == '__main__':
                                 text_i = font.render(str(resource[3]), True, (255, 0, 0))
                                 text_o = font.render(str(resource[5]), True, (255, 0, 0))
                             elif d == 500 and resource[4] >= 2 and resource[3] >= 2 \
-                                    and resource[4] > remove_resource[4] + 1 and resource[3] >= remove_resource[3]\
-                                    and brd[cell_y + 1][cell_x] in [2, 1, '--', '-|', 1000, 2000, 111, 112] and\
-                                    brd[cell_y][cell_x + 1] in [2, 1, '--', '-|', 1000, 2000, 111, 112]\
+                                    and resource[4] > remove_resource[4] + 1 and resource[3] >= remove_resource[3] \
+                                    and brd[cell_y + 1][cell_x] in [2, 1, '--', '-|', 1000, 2000, 111, 112] and \
+                                    brd[cell_y][cell_x + 1] in [2, 1, '--', '-|', 1000, 2000, 111, 112] \
                                     and brd[cell_y + 1][cell_x + 1] in [2, 1, '--', '-|', 1000, 2000, 111, 112]:
-                                brd[cell_y][cell_x], brd[cell_y + 1][cell_x + 1], brd[cell_y + 1][cell_x],\
+                                brd[cell_y][cell_x], brd[cell_y + 1][cell_x + 1], brd[cell_y + 1][cell_x], \
                                 brd[cell_y][cell_x + 1] = 500, '-', '-', '-'
                                 for i in range(10):
                                     for j in range(10):
@@ -963,58 +964,58 @@ if __name__ == '__main__':
                                             brd[cell_y - 4 + i][cell_x - 4 + j] = \
                                                 int(str(brd[cell_y - 4 + i][cell_x - 4 + j]) +
                                                     '00' + str(step_of_person))
-                                remove_resource[4] += 2
-                                remove_resource[3] += 2
+                                resource[4] -= 2
+                                resource[3] -= 2
                             elif d == 100 and int(str(brd[cell_y][cell_x])[0]) == 4 and resource[4] > 0 \
                                     and resource[4] > remove_resource[4]:
                                 brd[cell_y][cell_x] = 100
                                 remove_resource[4] -= 3
-                                remove_resource[4] += 1
+                                resource[4] -= 1
                             elif d == 200 and int(str(brd[cell_y][cell_x])[0]) == 3 and resource[4] > 1 \
                                     and resource[4] > remove_resource[4] + 1 and resource[3] >= remove_resource[3]:
                                 brd[cell_y][cell_x] = 200
                                 remove_resource[3] -= 1
-                                remove_resource[4] += 1
+                                resource[4] -= 1
                             elif d == 400 and int(str(brd[cell_y][cell_x])[0]) == 6 and resource[3] >= 2 and \
                                     resource[5] >= 1 and resource[3] >= remove_resource[3] and \
                                     resource[5] >= remove_resource[5]:
                                 brd[cell_y][cell_x] = 400
                                 remove_resource[6] -= 1
-                                remove_resource[3] += 2
-                                remove_resource[5] += 1
+                                resource[3] -= 2
+                                resource[5] -= 1
                             elif d == 300 and int(str(brd[cell_y][cell_x])[0]) == 5 and resource[4] >= 2 and \
                                     resource[3] >= 2 and resource[4] > remove_resource[4] + 1 and \
                                     resource[3] >= remove_resource[3]:
                                 brd[cell_y][cell_x] = 300
                                 remove_resource[5] -= 1
-                                remove_resource[4] += 2
-                                remove_resource[3] += 2
+                                resource[4] -= 2
+                                resource[3] -= 2
                             # добыча ресурсов
                         if int(str(brd[cell_y][cell_x])[-1]) == step_of_person:
                             if d == 100 and int(str(brd[cell_y][cell_x])[0]) == 4 and resource[4] > 0 \
                                     and resource[4] > remove_resource[4]:
                                 brd[cell_y][cell_x] = 100
                                 remove_resource[4] -= 3
-                                remove_resource[4] += 1
+                                resource[4] -= 1
                             elif d == 200 and int(str(brd[cell_y][cell_x])[0]) == 3 and resource[4] > 1 \
                                     and resource[4] > remove_resource[4] + 1 and resource[3] >= remove_resource[3]:
                                 brd[cell_y][cell_x] = 200
                                 remove_resource[3] -= 1
-                                remove_resource[4] += 1
+                                resource[4] -= 1
                             elif d == 400 and int(str(brd[cell_y][cell_x])[0]) == 6 and resource[3] >= 2 and \
                                     resource[5] >= 1 and resource[3] >= remove_resource[3] and \
                                     resource[5] >= remove_resource[5]:
                                 brd[cell_y][cell_x] = 400
                                 remove_resource[6] -= 1
-                                remove_resource[3] += 2
-                                remove_resource[5] += 1
+                                resource[3] -= 2
+                                resource[5] -= 1
                             elif d == 300 and int(str(brd[cell_y][cell_x])[0]) == 5 and resource[4] >= 2 and \
                                     resource[3] >= 2 and resource[4] > remove_resource[4] + 1 and \
                                     resource[3] >= remove_resource[3]:
                                 brd[cell_y][cell_x] = 300
                                 remove_resource[5] -= 1
-                                remove_resource[4] += 2
-                                remove_resource[3] += 2
+                                resource[4] -= 2
+                                resource[3] -= 2
                         unit.render()
                         board.update_board(brd)
                 if step.pressed(event.pos):
@@ -1030,15 +1031,27 @@ if __name__ == '__main__':
                         step_of_person = 1
                         resource = red.res()
                         if you == 'server':
+                            client.send('1'.encode('utf-8'))
+                            time.sleep(0.2)
                             client.send(f'brd = {brd}'.encode('utf-8'))
+                            time.sleep(0.2)
                             client.send(f'brd_un = {brd_un}'.encode('utf-8'))
+                            time.sleep(0.2)
+                            client.send('1'.encode('utf-8'))
+                            time.sleep(0.2)
                             client.send(f'step_of_person = {step_of_person}'.encode('utf-8'))
                     else:
                         step_of_person = 0
                         resource = blue.res()
                         if you == 'client':
+                            sock.send('1'.encode('utf-8'))
+                            time.sleep(0.2)
                             sock.send(f'brd = {brd}'.encode('utf-8'))
+                            time.sleep(0.2)
                             sock.send(f'brd_un = {brd_un}'.encode('utf-8'))
+                            time.sleep(0.2)
+                            sock.send('1'.encode('utf-8'))
+                            time.sleep(0.2)
                             sock.send(f'step_of_person = {step_of_person}'.encode('utf-8'))
                     remove_resource = {3: 0, 4: 0, 5: 0, 6: 0}
                     text_f = font.render(str(resource[4]), True, (255, 0, 0))
@@ -1048,30 +1061,51 @@ if __name__ == '__main__':
             elif event.type == KEYDOWN:
                 if event.key == K_ESCAPE:
                     board.menu()
+        if step_of_person == 0:
+            screen.blit(font2.render('Xод синих', True, (0, 0, 255)), (1700, 0))
+            if you == 'client':
+                n_b = sock.recv(10485760)
+                time.sleep(0.2)
+                n_b_plus = sock.recv(10485760)
+                time.sleep(0.2)
+                exec(n_b_plus.decode('utf-8'))
+                n_b_u = sock.recv(10485760)
+                exec(n_b_u.decode('utf-8'))
+                g = sock.recv(10485760)
+                s_o_p = sock.recv(10485760)
+                exec(s_o_p.decode('utf-8'))
+                board.update_board(brd)
+                unit.update_board(brd_un)
+                board.render()
+                unit.render()
+        else:
+            screen.blit(font2.render('Xод красных', True, (255, 0, 0)), (1700, 0))
+            if you == 'server':
+                n_b = client.recv(10485760)
+                time.sleep(0.2)
+                n_b_plus = client.recv(10485760)
+                time.sleep(0.2)
+                exec(n_b_plus.decode('utf-8'))
+                n_b_u = client.recv(10485760)
+                exec(n_b_u.decode('utf-8'))
+                g = client.recv(10485760)
+                s_o_p = client.recv(10485760)
+                exec(s_o_p.decode('utf-8'))
+                board.update_board(brd)
+                unit.update_board(brd_un)
+                board.render()
+                unit.render()
         pygame.draw.rect(screen, (10, 96, 150), (60, 30, 1860, 1050))
         screen.blit(text_f, (60, 270))
         screen.blit(text_i, (60, 330))
         screen.blit(text_o, (60, 390))
         screen.blit(text_w, (60, 450))
+        for i in range(35):
+            for j in range(62):
+                for sprite in units_sprites:
+                    if sprite.rect.x == j * 30 + 60 and sprite.rect.y == i * 30 + 30 and brd_un[i][j] == 0:
+                        sprite.kill()
         all_sprites.draw(screen)
-        if step_of_person == 0:
-            screen.blit(font2.render('Xод синих', True, (0, 0, 255)), (1700, 0))
-            if you == 'client':
-                n_b = sock.recv(10240)
-                n_b_u = sock.recv(10240)
-                s_o_p = sock.recv(10240)
-                exec(n_b.decode('utf-8'))
-                exec(n_b_u.decode('utf-8'))
-                exec(s_o_p.decode('utf-8'))
-        else:
-            screen.blit(font2.render('Xод красных', True, (255, 0, 0)), (1700, 0))
-            if you == 'server':
-                n_b = client.recv(10240)
-                n_b_u = client.recv(10240)
-                s_o_p = client.recv(10240)
-                exec(n_b.decode('utf-8'))
-                exec(n_b_u.decode('utf-8'))
-                exec(s_o_p.decode('utf-8'))
         if b == 0:
             screen.blit(pygame.font.Font(None, 300).render('Победа синих', True, (0, 0, 255)), (0, 0))
         elif b == 1:
