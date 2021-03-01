@@ -41,6 +41,7 @@ host = ''
 port = 5050
 brd = None
 client = None
+# запуск музыки
 pygame.mixer.music.load('data/Agression.mp3')
 pygame.mixer.music.set_volume(0.1)
 pygame.mixer.music.play(-1)
@@ -79,6 +80,7 @@ def data_received(data):
     change_map = open('data/save.txt', mode='w')
     change_map.write(data.decode('utf-8'))
     change_map.close()
+
 
 class InputBox:
     def __init__(self, x, y, w, h, text=''):
@@ -396,7 +398,6 @@ class Board:
         for y in range(self.height):
             for x in range(self.width):
                 position = (x * self.cell_size + self.left, y * self.cell_size + self.top)
-                size = self.cell_size, self.cell_size
                 if self.board[y][x] == 2:
                     field_image = load_image("grass.png")
                     field = pygame.sprite.Sprite(all_sprites)
@@ -482,6 +483,7 @@ class Board:
         pass
 
     def get_cell(self, mouse_pos):
+        # получение позиции нажатия мыши
         cell_x = (mouse_pos[0] - self.left) // self.cell_size
         cell_y = (mouse_pos[1] - self.top) // self.cell_size
         if (cell_x < 0 or cell_x >= self.width) or (cell_y < 0 or cell_y >= self.height):
@@ -498,9 +500,11 @@ class Board:
         self.on_click(cell)
 
     def get_board(self):
+        # возвращение матрицы доски
         return self.board
 
     def update_board(self, board):
+        # обновление матрицы доски
         self.board = board
 
     def menu(self):
@@ -555,7 +559,6 @@ class Board:
                         show = False
                 for box in input_boxes:
                     box.handle_event(event)
-
             for box in input_boxes:
                 box.update()
             screen.blit(background, (0, 0))
@@ -677,6 +680,7 @@ class Unit(pygame.sprite.Sprite):
             self.board_un[cell_y][cell_x] = [int(str(n) + '1'), 1]
 
     def get_board(self):
+        # возвращение матрицы доски юнитов
         return self.board_un
 
     def select(self, x, y):
@@ -688,9 +692,11 @@ class Unit(pygame.sprite.Sprite):
             return (-30, -30)
 
     def update_board(self, brd_un):
+        # обновление матрицы доски
         self.board_un = brd_un
 
     def render(self):
+        # рендер юнитов
         for y in range(35):
             for x in range(62):
                 position = (x * self.cell_size + self.left, y * self.cell_size + self.top)
@@ -888,12 +894,12 @@ if __name__ == '__main__':
                                 in [2, 111, 112] \
                                 and str(brd_un[pos_y][pos_x][0])[-1] == str(step_of_person) and \
                                 brd_un[pos_y][pos_x][-1] == 1 and (brd_un[cell_y][cell_x] == 0 or
-                                                                   ((brd_un[pos_y][pos_x][0] in [100, 101, 300, 301, 400, 401, 0]
-                                                                     and brd_un[cell_y][cell_x][0] in [200, 201]) or (brd_un[cell_y][cell_x][0] in
-                                                                                                                      [100, 101, 300, 301, 400, 401, 0] and
-                                                                                                                      brd_un[pos_y][pos_x][0] in [300, 301])
-                                                                    or (brd_un[pos_y][pos_x][0] in [300, 301, 400, 401, 0]
-                                                                        and brd_un[cell_y][cell_x][0] in [100, 101]))):
+                                        ((brd_un[pos_y][pos_x][0] in [100, 101, 300, 301, 400, 401, 0]
+                                        and brd_un[cell_y][cell_x][0] in [200, 201]) or (brd_un[cell_y][cell_x][0] in
+                                        [100, 101, 300, 301, 400, 401, 0] and
+                                        brd_un[pos_y][pos_x][0] in [300, 301])
+                                        or (brd_un[pos_y][pos_x][0] in [300, 301, 400, 401, 0]
+                                        and brd_un[cell_y][cell_x][0] in [100, 101]))):
                             print(brd_un[pos_y][pos_x])
                             brd_un[cell_y][cell_x] = [brd_un[pos_y][pos_x][0], 0]
                             brd_un[pos_y][pos_x] = 0
@@ -922,7 +928,7 @@ if __name__ == '__main__':
                                 resource[3] -= 2
                                 text_f = font.render(str(resource[4]), True, (255, 0, 0))
                                 text_i = font.render(str(resource[3]), True, (255, 0, 0))
-                            elif d == 20 and resource[4] >= 1 and resource[3] >= 1 and resource[4] > remove_resource[4] \
+                            elif d == 20 and resource[4] >= 1 and resource[3] >= 1 and resource[4] > remove_resource[4]\
                                     and resource[3] > remove_resource[3] and brd_un[cell_y][cell_x] == 0:
                                 unit.update(x, y, 20)
                                 resource[4] -= 1
